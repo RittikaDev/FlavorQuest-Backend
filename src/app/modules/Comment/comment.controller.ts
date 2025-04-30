@@ -31,7 +31,7 @@ const getPostComments = catchAsync(async (req: Request, res: Response) => {
 	const result = await CommentService.getCommentsByPostId(postId);
 	sendResponse(res, {
 		success: true,
-		status: httpStatus.CREATED,
+		status: httpStatus.OK,
 		message: "Post retrieved successfully!",
 		data: result,
 	});

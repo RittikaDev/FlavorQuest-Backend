@@ -105,8 +105,7 @@ model Rating {
   post            FoodPost      @relation(fields: [postId], references: [id])
   createdAt       DateTime      @default(now())
 
-  @@index([userId])
-  @@index([postId])
+  @@unique([userId, postId]) 
 
   @@map("ratings")
 }

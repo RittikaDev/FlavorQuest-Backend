@@ -5,6 +5,7 @@ import { AuthRoutes } from "../modules/Auth/auth.routes";
 import { PostRoutes } from "../modules/Posts/post.route";
 import { CategoryRoutes } from "../modules/Category/category.route";
 import { CommentRoutes } from "../modules/Comment/comment.route";
+import { RatingRoutes } from "../modules/Ratings/rating.route";
 
 const router = express.Router();
 
@@ -28,6 +29,10 @@ const allRoutes = [
 	{
 		path: "/comment",
 		route: CommentRoutes,
+	},
+	{
+		path: "/rating",
+		route: RatingRoutes,
 	},
 ];
 
