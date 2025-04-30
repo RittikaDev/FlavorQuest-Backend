@@ -12,7 +12,7 @@ declare module "shurjopay" {
     readonly verification_url: string;
     readonly payment_status_url: string;
   }
-// 
+
   interface TokenDetails {
     token: string;
     token_type: string;
