@@ -6,6 +6,7 @@ import { PostRoutes } from "../modules/Posts/post.route";
 import { CategoryRoutes } from "../modules/Category/category.route";
 import { CommentRoutes } from "../modules/Comment/comment.route";
 import { RatingRoutes } from "../modules/Ratings/rating.route";
+import { VoteRoutes } from "../modules/Vote/vote.route";
 
 const router = express.Router();
 
@@ -33,6 +34,10 @@ const allRoutes = [
 	{
 		path: "/rating",
 		route: RatingRoutes,
+	},
+	{
+		path: "/vote",
+		route: VoteRoutes,
 	},
 ];
 
