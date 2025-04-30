@@ -12,10 +12,10 @@ const router = express.Router();
 
 router.post(
 	"/register",
-	// multerUpload.single("file"),
+	multerUpload.single("file"),
 	(req: Request, res: Response, next: NextFunction) => {
-		// Validate the body directly, no need to use JSON.parse()
-		req.body = userValidation.createUserValidation.parse(req.body);
+		const data = JSON.parse(req.body);
+		req.body = userValidation.createUserValidation.parse(data.data);
 		return usersControllers.createUser(req, res, next);
 	}
 );

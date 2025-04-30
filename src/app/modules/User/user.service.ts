@@ -27,10 +27,10 @@ const createUser = async (req: Request) => {
 	// If user exists, throw an error or handle it as needed
 	if (existingUser) throw new Error("User with this email already exists");
 
-	//   const file = req.file as IFile;
+	const file = req.file as IFile;
 
-	//   let profilePhoto = null;
-	//   if (file) profilePhoto = file.path;
+	let profilePhoto = null;
+	if (file) profilePhoto = file.path;
 
 	const hashedPassword: string = await bcrypt.hash(req.body.password, 12);
 
@@ -39,7 +39,7 @@ const createUser = async (req: Request) => {
 		email: req.body.email,
 		contactNumber: req.body.contactNumber,
 		role: req.body.role,
-		// profilePhoto: profilePhoto,
+		profilePhoto: profilePhoto,
 		password: hashedPassword,
 	};
 
