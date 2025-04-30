@@ -5,6 +5,9 @@ import sendResponse from "../../../share/sendResponse";
 import { IAuthUser } from "../../interfaces/common";
 import { PostService } from "./post.service";
 import { PostStatus } from "@prisma/client";
+import pick from "../../../share/pick";
+import { postFilterableFields } from "./post.constants";
+import { paginationHelper } from "../../../helpers/paginationHelper";
 
 const createPost = catchAsync(
 	async (req: Request & { user?: IAuthUser }, res: Response) => {
@@ -40,7 +43,27 @@ const updatePost = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const getPosts = catchAsync(
+	async (req: Request & { user?: IAuthUser }, res: Response) => {
+		const user = req.user;
+		const filters = pick(req.query, postFilterableFields);
+		const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+
+		if (!user) throw new Error("User is not authenticated");
+
+		const result = await PostService.getPosts(user, filters, options);
+
+		sendResponse(res, {
+			success: true,
+			status: httpStatus.OK,
+			message: "Posts retrieved successfully",
+			data: result,
+		});
+	}
+);
+
 export const PostController = {
 	createPost,
 	updatePost,
+	getPosts,
 };

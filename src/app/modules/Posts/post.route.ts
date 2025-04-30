@@ -20,4 +20,10 @@ router.post(
 
 router.patch("/update/:id", auth(UserRole.ADMIN), PostController.updatePost);
 
+router.get(
+	"/",
+	auth(UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN),
+	PostController.getPosts
+);
+
 export const PostRoutes = router;

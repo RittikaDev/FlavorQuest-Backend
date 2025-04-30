@@ -20,7 +20,7 @@ model User {
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
-  foodpost                 FoodPost[]
+  foodpost              FoodPost[]
   
   @@index([email])
   @@index([status])
@@ -29,19 +29,20 @@ model User {
 
 
 model FoodPost {
-  id          String        @id @unique @default(uuid())
-  title       String
-  description String
-  location    String
-  price       Float
-  image       String
-  category    String
-  status      PostStatus    @default(PENDING)
-  isPremium   Boolean       @default(false)
-  userId      String
-  user        User          @relation(fields: [userId], references: [id])
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id             String        @id @unique @default(uuid())
+  title          String
+  description    String
+  location       String
+  minPrice       Float
+  maxPrice       Float
+  image          String
+  category       String
+  status         PostStatus    @default(PENDING)
+  isPremium      Boolean       @default(false)
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   @@map("food_posts")
 }
