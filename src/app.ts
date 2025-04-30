@@ -14,9 +14,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req: Request, res: Response) => {
-  res.send({
-    Message: "Street Food Finder are running..",
-  });
+	res.send({
+		Message: "FlavortQuest is running",
+	});
 });
 
 app.use("/api/v1", router);
@@ -24,14 +24,14 @@ app.use("/api/v1", router);
 app.use(globalErrorHandler);
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-  res.status(httpStatus.NOT_FOUND).json({
-    success: false,
-    message: "API NOT FOUND!",
-    error: {
-      path: req.originalUrl,
-      message: "The requested path was not found.",
-    },
-  });
+	res.status(httpStatus.NOT_FOUND).json({
+		success: false,
+		message: "API NOT FOUND!",
+		error: {
+			path: req.originalUrl,
+			message: "The requested path was not found.",
+		},
+	});
 });
 
 export default app;

@@ -11,41 +11,45 @@ import { multerUpload } from "../../../config/multer.config";
 const router = express.Router();
 
 router.post(
-  "/register",
-  // multerUpload.single("file"),
-  (req: Request, res: Response, next: NextFunction) => {
-    // Validate the body directly, no need to use JSON.parse()
-    req.body = userValidation.createUserValidation.parse(req.body);
-    return usersControllers.createUser(req, res, next);
-  }
+	"/register",
+	// multerUpload.single("file"),
+	(req: Request, res: Response, next: NextFunction) => {
+		// Validate the body directly, no need to use JSON.parse()
+		req.body = userValidation.createUserValidation.parse(req.body);
+		return usersControllers.createUser(req, res, next);
+	}
 );
 
 router.get("/", auth(UserRole.ADMIN), usersControllers.getAllUsers);
 
 router.get(
-  "/my-profile",
-  auth(UserRole.ADMIN, UserRole.USER, UserRole.PREMIUM_USER),
-  usersControllers.getMyProfileFromDb
+	"/my-profile",
+	auth(UserRole.ADMIN, UserRole.USER, UserRole.PREMIUM_USER),
+	usersControllers.getMyProfile
 );
 
-router.get("/:userId", usersControllers.getAUsers);
+router.get("/:userId", usersControllers.getSpecificUser);
 
 router.put(
-  "/update",
-  auth(UserRole.ADMIN, UserRole.USER, UserRole.PREMIUM_USER),
-  usersControllers.updateAUser
+	"/update",
+	auth(UserRole.ADMIN, UserRole.USER, UserRole.PREMIUM_USER),
+	multerUpload.single("file"),
+	(req: Request, res: Response, next: NextFunction) => {
+		req.body = JSON.parse(req.body.data);
+		return usersControllers.updateAUser(req, res, next);
+	}
 );
 
 router.delete(
-  "/delete/:userId",
-  auth(UserRole.ADMIN),
-  usersControllers.deleteAUserFromDB
+	"/delete/:userId",
+	auth(UserRole.ADMIN),
+	usersControllers.deleteAUser
 );
 
 router.delete(
-  "/suspend/:userId",
-  auth(UserRole.ADMIN),
-  usersControllers.suspendAUser
+	"/block/:userId",
+	auth(UserRole.ADMIN),
+	usersControllers.blockAUser
 );
 
 export const UsersRoutes = router;

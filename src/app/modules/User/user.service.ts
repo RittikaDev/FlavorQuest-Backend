@@ -131,7 +131,7 @@ const getAllUsers = async (req: Request) => {
 	};
 };
 
-const getAUsers = async (req: Request) => {
+const getSpecificUser = async (req: Request) => {
 	const user = await prisma.user.findUniqueOrThrow({
 		where: {
 			id: req.params.userId,
@@ -151,10 +151,10 @@ const getAUsers = async (req: Request) => {
 };
 
 const getMyProfile = async (req: Request & { user?: IAuthUser }) => {
-	const user = req.user;
+	const userEmail = req.user?.email;
 	const userInfo = await prisma.user.findUniqueOrThrow({
 		where: {
-			email: user!.email,
+			email: userEmail,
 		},
 		select: {
 			id: true,
@@ -170,26 +170,23 @@ const getMyProfile = async (req: Request & { user?: IAuthUser }) => {
 	return userInfo;
 };
 
-// update
 const updateUser = async (req: Request & { user?: IAuthUser }) => {
 	try {
 		const file = req.file as IFile | undefined;
 
-		// Validate user
 		const user = await prisma.user.findUniqueOrThrow({
 			where: { email: req.user?.email },
 			select: { id: true },
 		});
 
-		// Validate input
+		console.log(user);
+
 		if (!user) throw new Error("User is Not Found");
 
 		const updateData: Record<string, any> = { ...req.body };
-		if (file) {
-			updateData.profilePhoto = file.path;
-		}
+		console.log(req, updateData);
+		if (file) updateData.profilePhoto = file.path;
 
-		// Update the user
 		const updatedUser = await prisma.user.update({
 			where: { id: user.id },
 			data: updateData,
@@ -201,45 +198,43 @@ const updateUser = async (req: Request & { user?: IAuthUser }) => {
 	}
 };
 
-// delete
 const deleteUser = async (req: Request) => {
 	try {
 		const userId = req.params.userId;
 
-		const isNotExitsUser = await prisma.user.findUnique({
+		const existingUser = await prisma.user.findUnique({
 			where: { id: userId },
 		});
 
-		if (!isNotExitsUser) {
-			throw new Error("User not found");
-		}
+		if (!existingUser) throw new Error("User can not be found");
 
-		// Delete related data
+		if (existingUser.status === UserStatus.DELETED)
+			throw new Error("User is already marked as deleted");
 
-		// await prisma.vendorShop.deleteMany({ where: { ownerId: userId } });
-
-		// Delete the user
-		const result = await prisma.user.delete({
+		const result = await prisma.user.update({
 			where: { id: userId },
+			data: {
+				status: UserStatus.DELETED,
+			},
 		});
 
 		return result;
 	} catch (err) {
-		throw new Error(
-			"An error occurred while deleting the user and related data"
-		);
+		throw new Error("An error occurred while marking the user as deleted");
 	}
 };
 
-const suspendUser = async (req: Request) => {
+const blockUser = async (req: Request) => {
 	try {
 		const isNotExitsUser = await prisma.user.findUnique({
 			where: {
 				id: req.params.userId,
 			},
 		});
-
-		if (!isNotExitsUser) throw new Error("User not found");
+		console.log(isNotExitsUser);
+		if (isNotExitsUser?.status === UserStatus.DELETED)
+			throw new Error("User is already marked as deleted, can not be blocked");
+		else if (!isNotExitsUser) throw new Error("User not found");
 
 		const result = await prisma.user.update({
 			where: {
@@ -247,24 +242,24 @@ const suspendUser = async (req: Request) => {
 			},
 			data: {
 				status:
-					isNotExitsUser.status === "ACTIVE"
+					isNotExitsUser.status === UserStatus.ACTIVE
 						? UserStatus.BLOCKED
 						: UserStatus.ACTIVE,
 			},
 		});
 
 		return result;
-	} catch (err) {
-		throw new Error("An error occurred while deleting the member");
+	} catch (err: any) {
+		throw new Error(err.message || "An unexpected error occurred");
 	}
 };
 
 export const userServices = {
 	createUser,
 	getAllUsers,
-	getAUsers,
+	getSpecificUser,
 	updateUser,
 	deleteUser,
-	suspendUser,
+	blockUser,
 	getMyProfile,
 };
