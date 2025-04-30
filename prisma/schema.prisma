@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String        @id @unique @default(uuid())
+  name                  String
+  email                 String        @unique
+  password              String
+  profilePhoto          String?
+  contactNumber         String?
+  needPasswordChange    Boolean       @default(true)
+  role                  UserRole      @default(USER)
+  status                UserStatus    @default(ACTIVE)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  foodpost                 FoodPost[]
+  
+  @@index([email])
+  @@index([status])
+  @@map("users")
+}
+
+
+model FoodPost {
+  id          String        @id @unique @default(uuid())
+  title       String
+  description String
+  location    String
+  price       Float
+  image       String
+  category    String
+  status      PostStatus    @default(PENDING)
+  isPremium   Boolean       @default(false)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("food_posts")
+}
+
+
+enum UserRole {
+  USER
+  PREMIUM_USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  DELETED
+}
+
+enum PostStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
