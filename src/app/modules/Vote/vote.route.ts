@@ -7,7 +7,7 @@ import { VoteController } from "./vote.controller";
 import { VoteValidation } from "./vote.validation";
 
 const router = express.Router();
-
+// 
 router.post(
 	"/:postId",
 	auth(UserRole.USER, UserRole.PREMIUM_USER),

@@ -108,10 +108,6 @@ declare module "shurjopay" {
 
     constructor(): Shurjopay;
 
-<<<<<<< HEAD
-
-=======
->>>>>>> main
     config(
       root_url: string,
       merchant_username: string,
