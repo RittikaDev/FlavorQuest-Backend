@@ -7,7 +7,6 @@ import { PostService } from "./post.service";
 import { PostStatus } from "@prisma/client";
 import pick from "../../../share/pick";
 import { postFilterableFields } from "./post.constants";
-import { paginationHelper } from "../../../helpers/paginationHelper";
 
 const createPost = catchAsync(
 	async (req: Request & { user?: IAuthUser }, res: Response) => {
@@ -18,7 +17,7 @@ const createPost = catchAsync(
 		sendResponse(res, {
 			success: true,
 			status: httpStatus.CREATED,
-			message: "Appointment booked successfully!",
+			message: "Post Created successfully!",
 			data: result,
 		});
 	}
@@ -27,10 +26,15 @@ const createPost = catchAsync(
 // ADMIN CAN APPROVE, REJECT OR MAKE A POST PREMIUM
 const updatePost = catchAsync(async (req: Request, res: Response) => {
 	const postId = req.params.id;
-	const { status, isPremium } = req.body;
+	const { status, isPremium, adminComment } = req.body;
 
-	const updateData: Partial<{ status: PostStatus; isPremium: boolean }> = {};
+	const updateData: Partial<{
+		status: PostStatus;
+		adminComment: string;
+		isPremium: boolean;
+	}> = {};
 	if (status) updateData.status = status;
+	if (adminComment) updateData.adminComment = adminComment;
 	if (typeof isPremium === "boolean") updateData.isPremium = isPremium;
 
 	const result = await PostService.updatePostStatus(postId, updateData);

@@ -21,6 +21,10 @@ model User {
   updatedAt             DateTime      @updatedAt
 
   foodpost              FoodPost[]
+  comments              Comment[]
+  votes                 Vote[]
+  ratings               Rating[]
+  subscriptions         Subscription[]
   
   @@index([email])
   @@index([status])
@@ -36,15 +40,88 @@ model FoodPost {
   minPrice       Float
   maxPrice       Float
   image          String
-  category       String
+  categoryId     String
+  category       Category      @relation(fields: [categoryId], references: [id])
   status         PostStatus    @default(PENDING)
   isPremium      Boolean       @default(false)
+  adminComment   String? 
   userId         String
   user           User          @relation(fields: [userId], references: [id])
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
+  comments     Comment[]
+  votes        Vote[]
+  ratings      Rating[]
+
   @@map("food_posts")
+}
+
+
+model Category {
+  id        String     @id @unique @default(uuid())
+  name      String     @unique
+  posts     FoodPost[]
+
+  @@map("categories")
+}
+
+model Comment {
+  id              String       @id @unique @default(uuid())
+  text            String
+  userId          String        
+  postId          String
+  user            User         @relation(fields: [userId], references: [id])
+  post            FoodPost     @relation(fields: [postId], references: [id])
+  createdAt       DateTime     @default(now())
+
+  @@index([userId])
+  @@index([postId])
+
+  @@map("comments")
+}
+
+model Vote {
+  id              String       @id @unique @default(uuid())
+  type            VoteType
+  userId          String
+  postId          String
+  user            User         @relation(fields: [userId], references: [id])
+  post            FoodPost     @relation(fields: [postId], references: [id])
+  createdAt       DateTime     @default(now())
+
+  @@index([userId])
+  @@index([postId])
+
+  @@map("votes")
+}
+
+model Rating {
+  id              String        @id @unique @default(uuid())
+  score           Int      
+  userId          String
+  postId          String
+  user            User          @relation(fields: [userId], references: [id])
+  post            FoodPost      @relation(fields: [postId], references: [id])
+  createdAt       DateTime      @default(now())
+
+  @@index([userId])
+  @@index([postId])
+
+  @@map("ratings")
+}
+
+model Subscription {
+  id              String                @id @unique @default(uuid())
+  userId          String
+  user            User                  @relation(fields: [userId], references: [id])
+  status          SubscriptionStatus   
+  transactionId   String
+  expiryDate      DateTime?
+  createdAt       DateTime              @default(now())
+
+  @@index([userId])
+  @@map("subscriptions")
 }
 
 
@@ -64,4 +141,16 @@ enum PostStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum VoteType {
+  UPVOTE
+  DOWNVOTE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PENDING
 }

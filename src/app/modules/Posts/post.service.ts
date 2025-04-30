@@ -9,13 +9,22 @@ import { IPaginationOptions } from "../../interfaces/pagination";
 
 // CREATE A POST
 const createPost = async (user: IAuthUser, req: Request) => {
-	const { title, description, location, minPrice, maxPrice, category } =
+	const { title, description, location, minPrice, maxPrice, categoryId } =
 		req.body;
+
+	// USER DATA
 	const userData = await prisma.user.findUniqueOrThrow({
-		where: {
-			email: user?.email,
-		},
+		where: { email: user?.email },
 	});
+
+	// CHECK IF THE CATEGORYID EXISTS IN THE CATEGORY TABLE
+	const categoryExists = await prisma.category.findUnique({
+		where: { id: categoryId },
+	});
+
+	if (!categoryExists) throw new Error("Invalid category ID");
+
+	// FILE UPLOAD
 	const file = req.file as IFile;
 	let imagetoUpload: string = "";
 	if (file) imagetoUpload = file.path;
@@ -28,7 +37,7 @@ const createPost = async (user: IAuthUser, req: Request) => {
 			minPrice,
 			maxPrice,
 			image: imagetoUpload,
-			category,
+			categoryId: categoryId,
 			userId: userData.id,
 		},
 		select: {
@@ -47,15 +56,21 @@ const createPost = async (user: IAuthUser, req: Request) => {
 };
 
 // ADMIN CAN APPROVE, REJECT OR MAKE A POST PREMIUM
-export const updatePostStatus = async (
+const updatePostStatus = async (
 	postId: string,
-	data: Partial<{ status: PostStatus; isPremium: boolean }>
+	data: Partial<{
+		status: PostStatus;
+		isPremium: boolean;
+		adminComment: string;
+	}>
 ) => {
 	return prisma.foodPost.update({
 		where: { id: postId },
 		data: {
 			...data,
 			status: data.status as PostStatus | undefined,
+			adminComment: data.adminComment,
+			isPremium: data.isPremium,
 		},
 	});
 };
@@ -94,12 +109,18 @@ const getPosts = async (
 
 	// FILTER BY CATEGORY
 	if (filters.category) {
-		andConditions.push({
-			category: {
-				equals: filters.category,
-				mode: "insensitive",
+		// FIND THE CATEGORYID BASED ON THE CATEGORY NAME
+		const category = await prisma.category.findUnique({
+			where: {
+				name: filters.category,
 			},
 		});
+
+		if (category) {
+			andConditions.push({
+				categoryId: category.id,
+			});
+		}
 	}
 
 	// FILTER BY PRICE RANGE

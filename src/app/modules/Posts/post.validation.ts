@@ -6,7 +6,7 @@ const createPostValidation = z.object({
 	location: z.string().min(1, "Location is required"),
 	minPrice: z.number().min(10, "Price must be a positive number"),
 	maxPrice: z.number().min(20, "Price must be a positive number"),
-	category: z.string().min(1, "Category is required"),
+	categoryId: z.string().min(1, "Category is required"),
 });
 export const PostValidations = {
 	createPostValidation,
