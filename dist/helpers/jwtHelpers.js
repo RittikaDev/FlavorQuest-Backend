@@ -12,6 +12,7 @@ const generateToken = (payload, secret, expiresIn) => {
     });
     return token;
 };
+// 
 const verifyToken = (token, secret) => {
     return jsonwebtoken_1.default.verify(token, secret);
 };
