@@ -11,8 +11,7 @@ const createSubscription = async (userEmail: string, clientIp: string) => {
 
   if (!userDetails) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
 
-  const amount = 500; // PREMIUM SUBSCRIPTION PRICE
-
+  const amount = 999; // PREMIUM SUBSCRIPTION PRICE
 
   const subscription = await prisma.subscription.create({
     data: {
