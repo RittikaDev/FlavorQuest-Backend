@@ -19,6 +19,7 @@ const sendResponse_1 = __importDefault(require("../../../share/sendResponse"));
 const post_service_1 = require("./post.service");
 const pick_1 = __importDefault(require("../../../share/pick"));
 const post_constants_1 = require("./post.constants");
+// CREATE A POST
 const createPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = req.user;
     const result = yield post_service_1.PostService.createPost(user, req);
@@ -26,6 +27,18 @@ const createPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
         success: true,
         status: http_status_1.default.CREATED,
         message: "Post Created successfully!",
+        data: result,
+    });
+}));
+// UPDATE POST BY USER
+const updatePostByUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    console.log(req);
+    const result = yield post_service_1.PostService.updatePostByUser(user, req);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        status: http_status_1.default.OK,
+        message: "Post updated successfully!",
         data: result,
     });
 }));
@@ -62,8 +75,32 @@ const getPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 
         data: result,
     });
 }));
+// UPDATE POST BY USER
+const getUserPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const userEmail = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
+    // console.log(req);
+    const filters = (0, pick_1.default)(req.query, post_constants_1.postFilterableFields);
+    const options = (0, pick_1.default)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+    const result = yield post_service_1.PostService.getUserPosts(userEmail, filters, options);
+    if (result.data.length === 0)
+        return (0, sendResponse_1.default)(res, {
+            success: false,
+            status: http_status_1.default.NOT_FOUND,
+            message: "No posts found for this user!",
+            data: null,
+        });
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        status: http_status_1.default.OK,
+        message: "Post retrieved successfully!",
+        data: result,
+    });
+}));
 exports.PostController = {
     createPost,
+    updatePostByUser,
     updatePost,
     getPosts,
+    getUserPosts,
 };

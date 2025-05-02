@@ -8,66 +8,112 @@ import { PostStatus } from "@prisma/client";
 import pick from "../../../share/pick";
 import { postFilterableFields } from "./post.constants";
 
+// CREATE A POST
 const createPost = catchAsync(
-	async (req: Request & { user?: IAuthUser }, res: Response) => {
-		const user = req.user;
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const user = req.user;
 
-		const result = await PostService.createPost(user as IAuthUser, req);
+    const result = await PostService.createPost(user as IAuthUser, req);
 
-		sendResponse(res, {
-			success: true,
-			status: httpStatus.CREATED,
-			message: "Post Created successfully!",
-			data: result,
-		});
-	}
+    sendResponse(res, {
+      success: true,
+      status: httpStatus.CREATED,
+      message: "Post Created successfully!",
+      data: result,
+    });
+  }
+);
+
+// UPDATE POST BY USER
+const updatePostByUser = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const user = req.user;
+    console.log(req);
+
+    const result = await PostService.updatePostByUser(user as IAuthUser, req);
+
+    sendResponse(res, {
+      success: true,
+      status: httpStatus.OK,
+      message: "Post updated successfully!",
+      data: result,
+    });
+  }
 );
 
 // ADMIN CAN APPROVE, REJECT OR MAKE A POST PREMIUM
 const updatePost = catchAsync(async (req: Request, res: Response) => {
-	const postId = req.params.id;
-	const { status, isPremium, adminComment } = req.body;
+  const postId = req.params.id;
+  const { status, isPremium, adminComment } = req.body;
 
-	const updateData: Partial<{
-		status: PostStatus;
-		adminComment: string;
-		isPremium: boolean;
-	}> = {};
-	if (status) updateData.status = status;
-	if (adminComment) updateData.adminComment = adminComment;
-	if (typeof isPremium === "boolean") updateData.isPremium = isPremium;
+  const updateData: Partial<{
+    status: PostStatus;
+    adminComment: string;
+    isPremium: boolean;
+  }> = {};
+  if (status) updateData.status = status;
+  if (adminComment) updateData.adminComment = adminComment;
+  if (typeof isPremium === "boolean") updateData.isPremium = isPremium;
 
-	const result = await PostService.updatePostStatus(postId, updateData);
+  const result = await PostService.updatePostStatus(postId, updateData);
 
-	sendResponse(res, {
-		success: true,
-		status: httpStatus.OK,
-		message: "Post updated successfully!",
-		data: result,
-	});
+  sendResponse(res, {
+    success: true,
+    status: httpStatus.OK,
+    message: "Post updated successfully!",
+    data: result,
+  });
 });
 
 const getPosts = catchAsync(
-	async (req: Request & { user?: IAuthUser }, res: Response) => {
-		const user = req.user;
-		const filters = pick(req.query, postFilterableFields);
-		const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const user = req.user;
+    const filters = pick(req.query, postFilterableFields);
+    const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
 
-		if (!user) throw new Error("User is not authenticated");
+    if (!user) throw new Error("User is not authenticated");
 
-		const result = await PostService.getPosts(user, filters, options);
+    const result = await PostService.getPosts(user, filters, options);
 
-		sendResponse(res, {
-			success: true,
-			status: httpStatus.OK,
-			message: "Posts retrieved successfully",
-			data: result,
-		});
-	}
+    sendResponse(res, {
+      success: true,
+      status: httpStatus.OK,
+      message: "Posts retrieved successfully",
+      data: result,
+    });
+  }
+);
+
+// UPDATE POST BY USER
+const getUserPosts = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const userEmail = req.user?.email;
+    // console.log(req);
+    const filters = pick(req.query, postFilterableFields);
+    const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+
+    const result = await PostService.getUserPosts(userEmail!, filters, options);
+    if (result.data.length === 0)
+      return sendResponse(res, {
+        success: false,
+        status: httpStatus.NOT_FOUND,
+        message: "No posts found for this user!",
+        data: null,
+      });
+
+    sendResponse(res, {
+      success: true,
+      status: httpStatus.OK,
+      message: "Post retrieved successfully!",
+      data: result,
+    });
+  }
 );
 
 export const PostController = {
-	createPost,
-	updatePost,
-	getPosts,
+  createPost,
+  updatePostByUser,
+  updatePost,
+  getPosts,
+  getUserPosts,
 };

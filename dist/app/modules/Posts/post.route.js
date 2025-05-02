@@ -16,6 +16,17 @@ router.post("/", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.P
     req.body = post_validation_1.PostValidations.createPostValidation.parse(data);
     return post_controller_1.PostController.createPost(req, res, next);
 });
+router.patch("/updateByUser", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER), multer_config_1.multerUpload.single("file"), (req, res, next) => {
+    const data = JSON.parse(req.body.data);
+    req.body = post_validation_1.PostValidations.updatePostValidation.parse(data);
+    return post_controller_1.PostController.updatePostByUser(req, res, next);
+});
 router.patch("/update/:id", (0, auth_1.default)(client_1.UserRole.ADMIN), post_controller_1.PostController.updatePost);
+// router.patch(
+//   "/updateByUser",
+//   auth(UserRole.USER, UserRole.PREMIUM_USER),
+//   PostController.updatePostByUser
+// );
 router.get("/", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER, client_1.UserRole.ADMIN), post_controller_1.PostController.getPosts);
+router.get("/user-posts", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER, client_1.UserRole.ADMIN), post_controller_1.PostController.getUserPosts);
 exports.PostRoutes = router;
