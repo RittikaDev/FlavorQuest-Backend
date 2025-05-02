@@ -133,6 +133,7 @@ const getPosts = (user, filters, options) => __awaiter(void 0, void 0, void 0, f
             andConditions.push({ isPremium: false });
         }
     }
+    console.log(filters.searchTerm);
     // SEARCHTERM FILTER (title or category name)
     if (filters.searchTerm) {
         andConditions.push({
@@ -145,9 +146,11 @@ const getPosts = (user, filters, options) => __awaiter(void 0, void 0, void 0, f
                 },
                 {
                     category: {
-                        name: {
-                            contains: filters.searchTerm,
-                            mode: "insensitive",
+                        is: {
+                            name: {
+                                contains: filters.searchTerm,
+                                mode: "insensitive",
+                            },
                         },
                     },
                 },
@@ -244,7 +247,7 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
         where: { email },
     });
     const andConditions = [{ userId: userData.id }];
-    // Unified search on title or category name
+    // SEARCHTERM FILTER (title or category name)
     if (filters.searchTerm) {
         andConditions.push({
             OR: [
@@ -256,9 +259,11 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
                 },
                 {
                     category: {
-                        name: {
-                            contains: filters.searchTerm,
-                            mode: "insensitive",
+                        is: {
+                            name: {
+                                contains: filters.searchTerm,
+                                mode: "insensitive",
+                            },
                         },
                     },
                 },

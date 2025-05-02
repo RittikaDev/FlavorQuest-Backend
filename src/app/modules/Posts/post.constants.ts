@@ -3,6 +3,7 @@ export const postFilterableFields: string[] = [
   "category",
   "minPrice",
   "maxPrice",
+  "searchTerm",
 ];
 export const postSearchableFields: string[] = [
   "title",

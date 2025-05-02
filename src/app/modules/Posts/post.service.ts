@@ -168,7 +168,7 @@ const getPosts = async (
       andConditions.push({ isPremium: false });
     }
   }
-
+  console.log(filters.searchTerm);
   // SEARCHTERM FILTER (title or category name)
   if (filters.searchTerm) {
     andConditions.push({
@@ -181,9 +181,11 @@ const getPosts = async (
         },
         {
           category: {
-            name: {
-              contains: filters.searchTerm,
-              mode: "insensitive",
+            is: {
+              name: {
+                contains: filters.searchTerm,
+                mode: "insensitive",
+              },
             },
           },
         },
@@ -313,7 +315,7 @@ const getUserPosts = async (
 
   const andConditions: Prisma.FoodPostWhereInput[] = [{ userId: userData.id }];
 
-  // Unified search on title or category name
+  // SEARCHTERM FILTER (title or category name)
   if (filters.searchTerm) {
     andConditions.push({
       OR: [
@@ -325,9 +327,11 @@ const getUserPosts = async (
         },
         {
           category: {
-            name: {
-              contains: filters.searchTerm,
-              mode: "insensitive",
+            is: {
+              name: {
+                contains: filters.searchTerm,
+                mode: "insensitive",
+              },
             },
           },
         },
