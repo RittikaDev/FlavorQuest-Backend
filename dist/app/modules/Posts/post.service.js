@@ -437,6 +437,7 @@ const deletePostById = (postId, email) => __awaiter(void 0, void 0, void 0, func
     const userData = yield prisma_1.default.user.findUniqueOrThrow({
         where: { email },
     });
+    console.log(post);
     // IF NOT ADMIN, ENSURE THE USER OWNS THE POST
     if (userData.role !== client_1.UserRole.ADMIN && post.userId !== userData.id)
         throw new Error("You are not authorized to delete this post.");

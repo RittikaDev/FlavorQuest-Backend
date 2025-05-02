@@ -146,7 +146,7 @@ const getAdminDashboardStats = (0, catchAsync_1.default)((req, res) => __awaiter
 const deletePostById = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const userEmail = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
-    const postId = req.params.id;
+    const postId = req.params.postId;
     const result = yield post_service_1.PostService.deletePostById(postId, userEmail);
     if (!result)
         return (0, sendResponse_1.default)(res, {
