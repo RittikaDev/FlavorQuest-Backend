@@ -176,6 +176,7 @@ const getPosts = async (
     minPrice?: number;
     maxPrice?: number;
     category?: string;
+    role?: UserRole;
   },
   options: IPaginationOptions
 ) => {
@@ -197,7 +198,7 @@ const getPosts = async (
       andConditions.push({ isPremium: false });
     }
   }
-  console.log(filters.searchTerm);
+  // console.log(filters.searchTerm);
   // SEARCHTERM FILTER (title or category name)
   if (filters.searchTerm) {
     andConditions.push({
@@ -233,8 +234,14 @@ const getPosts = async (
       },
     });
   }
+  if (filters.role) {
+    andConditions.push({
+      user: {
+        role: filters.role,
+      },
+    });
+  }
 
-  // PRICE RANGE FILTER
   // console.log(filters.minPrice, filters.maxPrice);
   // PRICE RANGE FILTER
   if (filters.minPrice || filters.maxPrice) {

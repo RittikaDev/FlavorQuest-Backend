@@ -41,7 +41,11 @@ router.get(
   auth(UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN),
   PostController.getPosts
 );
-router.get("/user-posts", PostController.getUserPosts);
+router.get(
+  "/user-posts",
+  auth(UserRole.USER, UserRole.PREMIUM_USER),
+  PostController.getUserPosts
+);
 
 router.get(
   "/user-stats",

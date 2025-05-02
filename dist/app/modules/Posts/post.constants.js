@@ -7,6 +7,7 @@ exports.postFilterableFields = [
     "minPrice",
     "maxPrice",
     "searchTerm",
+    "role",
 ];
 exports.postSearchableFields = [
     "title",
