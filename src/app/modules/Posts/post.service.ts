@@ -530,6 +530,8 @@ const deletePostById = async (postId: string, email: string) => {
     where: { email },
   });
 
+  console.log(post);
+
   // IF NOT ADMIN, ENSURE THE USER OWNS THE POST
   if (userData.role !== UserRole.ADMIN && post.userId !== userData.id)
     throw new Error("You are not authorized to delete this post.");

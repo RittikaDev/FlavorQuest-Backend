@@ -172,7 +172,7 @@ const getAdminDashboardStats = catchAsync(
 const deletePostById = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
     const userEmail = req.user?.email;
-    const postId = req.params.id;
+    const postId = req.params.postId;
 
     const result = await PostService.deletePostById(postId, userEmail!);
     if (!result)
