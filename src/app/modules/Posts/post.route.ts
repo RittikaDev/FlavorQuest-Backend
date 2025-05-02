@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post(
   "/",
-  auth(UserRole.USER, UserRole.PREMIUM_USER),
+  auth(UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN),
   multerUpload.single("file"),
   (req: Request, res: Response, next: NextFunction) => {
     const data = JSON.parse(req.body.data);
@@ -56,6 +56,12 @@ router.get(
   "/admin-stats",
   auth(UserRole.ADMIN),
   PostController.getAdminDashboardStats
+);
+
+router.delete(
+  "/delete/:postId",
+  auth(UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN),
+  PostController.deletePostById
 );
 
 export const PostRoutes = router;

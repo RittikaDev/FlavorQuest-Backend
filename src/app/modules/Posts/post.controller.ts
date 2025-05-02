@@ -169,6 +169,29 @@ const getAdminDashboardStats = catchAsync(
   }
 );
 
+const deletePostById = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const userEmail = req.user?.email;
+    const postId = req.params.id;
+
+    const result = await PostService.deletePostById(postId, userEmail!);
+    if (!result)
+      return sendResponse(res, {
+        success: false,
+        status: httpStatus.NOT_FOUND,
+        message: "No post found with this ID!",
+        data: null,
+      });
+
+    sendResponse(res, {
+      success: true,
+      status: httpStatus.OK,
+      message: "Post deleted successfully!",
+      data: null,
+    });
+  }
+);
+
 export const PostController = {
   createPost,
   updatePostByUser,
@@ -179,4 +202,6 @@ export const PostController = {
 
   getUserDashboardStats,
   getAdminDashboardStats,
+
+  deletePostById,
 };

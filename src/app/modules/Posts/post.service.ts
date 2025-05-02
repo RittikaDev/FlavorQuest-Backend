@@ -507,6 +507,31 @@ const getAdminDashboardStats = async () => {
   };
 };
 
+// DELETE POST
+const deletePostById = async (postId: string, email: string) => {
+  // FIND THE POST FIRST
+  const post = await prisma.foodPost.findUnique({
+    where: { id: postId },
+  });
+
+  if (!post) throw new Error("Post not found.");
+
+  const userData = await prisma.user.findUniqueOrThrow({
+    where: { email },
+  });
+
+  // IF NOT ADMIN, ENSURE THE USER OWNS THE POST
+  if (userData.role !== UserRole.ADMIN && post.userId !== userData.id)
+    throw new Error("You are not authorized to delete this post.");
+
+  // DELETE THE POST
+  await prisma.foodPost.delete({
+    where: { id: postId },
+  });
+
+  return { message: "Post deleted successfully." };
+};
+
 export const PostService = {
   createPost,
   updatePostByUser,
@@ -517,4 +542,6 @@ export const PostService = {
 
   getUserDashboardStats,
   getAdminDashboardStats,
+
+  deletePostById,
 };

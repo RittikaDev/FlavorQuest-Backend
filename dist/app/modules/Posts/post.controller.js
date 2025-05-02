@@ -143,6 +143,25 @@ const getAdminDashboardStats = (0, catchAsync_1.default)((req, res) => __awaiter
         data: result,
     });
 }));
+const deletePostById = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const userEmail = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
+    const postId = req.params.id;
+    const result = yield post_service_1.PostService.deletePostById(postId, userEmail);
+    if (!result)
+        return (0, sendResponse_1.default)(res, {
+            success: false,
+            status: http_status_1.default.NOT_FOUND,
+            message: "No post found with this ID!",
+            data: null,
+        });
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        status: http_status_1.default.OK,
+        message: "Post deleted successfully!",
+        data: null,
+    });
+}));
 exports.PostController = {
     createPost,
     updatePostByUser,
@@ -152,4 +171,5 @@ exports.PostController = {
     getUserPosts,
     getUserDashboardStats,
     getAdminDashboardStats,
+    deletePostById,
 };

@@ -11,7 +11,7 @@ const client_1 = require("@prisma/client");
 const auth_1 = __importDefault(require("../../middlewares/auth"));
 const multer_config_1 = require("../../../config/multer.config");
 const router = express_1.default.Router();
-router.post("/", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER), multer_config_1.multerUpload.single("file"), (req, res, next) => {
+router.post("/", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER, client_1.UserRole.ADMIN), multer_config_1.multerUpload.single("file"), (req, res, next) => {
     const data = JSON.parse(req.body.data);
     req.body = post_validation_1.PostValidations.createPostValidation.parse(data);
     return post_controller_1.PostController.createPost(req, res, next);
@@ -32,4 +32,5 @@ router.get("/", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PR
 router.get("/user-posts", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER), post_controller_1.PostController.getUserPosts);
 router.get("/user-stats", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER), post_controller_1.PostController.getUserDashboardStats);
 router.get("/admin-stats", (0, auth_1.default)(client_1.UserRole.ADMIN), post_controller_1.PostController.getAdminDashboardStats);
+router.delete("/delete/:postId", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER, client_1.UserRole.ADMIN), post_controller_1.PostController.deletePostById);
 exports.PostRoutes = router;
