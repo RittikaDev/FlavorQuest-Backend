@@ -15,4 +15,5 @@ router.post("/", (0, auth_1.default)(client_1.UserRole.ADMIN), (req, res, next) 
     return category_controller_1.CategoryController.createCategory(req, res, next);
 });
 router.get("/", category_controller_1.CategoryController.getCategories);
+router.delete("/delete/:catId", (0, auth_1.default)(client_1.UserRole.ADMIN), category_controller_1.CategoryController.deleteCategoryById);
 exports.CategoryRoutes = router;

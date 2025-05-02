@@ -204,6 +204,13 @@ const getPosts = (user, filters, options) => __awaiter(void 0, void 0, void 0, f
             },
         });
     }
+    console.log(filters);
+    if (filters.status &&
+        Object.values(client_1.PostStatus).includes(filters.status)) {
+        andConditions.push({
+            status: filters.status,
+        });
+    }
     // console.log(filters.minPrice, filters.maxPrice);
     // PRICE RANGE FILTER
     if (filters.minPrice || filters.maxPrice) {

@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CategoryService = void 0;
+const client_1 = require("@prisma/client");
 const prisma_1 = __importDefault(require("../../../share/prisma"));
 // Service to create a new category
 const createCategory = (name) => __awaiter(void 0, void 0, void 0, function* () {
@@ -26,7 +27,32 @@ const createCategory = (name) => __awaiter(void 0, void 0, void 0, function* () 
 const getCategories = () => __awaiter(void 0, void 0, void 0, function* () {
     return prisma_1.default.category.findMany();
 });
+const deleteCategoryById = (categoryId, email) => __awaiter(void 0, void 0, void 0, function* () {
+    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+        where: { email },
+    });
+    if (userData.role !== client_1.UserRole.ADMIN)
+        throw new Error("Only admins can delete categories.");
+    // OPTIONAL: CHECK IF THE CATEGORY EXISTS
+    const category = yield prisma_1.default.category.findUnique({
+        where: { id: categoryId },
+    });
+    if (!category)
+        throw new Error("Category not found.");
+    // OPTIONAL: CHECK IF ANY POSTS ARE USING THIS CATEGORY BEFORE DELETION
+    const hasPosts = yield prisma_1.default.foodPost.findFirst({
+        where: { categoryId },
+    });
+    if (hasPosts)
+        throw new Error("Cannot delete category with associated posts.");
+    // DELETE THE CATEGORY
+    yield prisma_1.default.category.delete({
+        where: { id: categoryId },
+    });
+    return { message: "Category deleted successfully." };
+});
 exports.CategoryService = {
     createCategory,
     getCategories,
+    deleteCategoryById,
 };

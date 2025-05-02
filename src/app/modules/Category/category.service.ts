@@ -1,21 +1,53 @@
-import { Category } from "@prisma/client";
+import { Category, UserRole } from "@prisma/client";
 import prisma from "../../../share/prisma";
 
 // Service to create a new category
 const createCategory = async (name: string) => {
-	return prisma.category.create({
-		data: {
-			name,
-		},
-	});
+  return prisma.category.create({
+    data: {
+      name,
+    },
+  });
 };
 
 // Service to get all categories
 const getCategories = async () => {
-	return prisma.category.findMany();
+  return prisma.category.findMany();
+};
+
+const deleteCategoryById = async (categoryId: string, email: string) => {
+  const userData = await prisma.user.findUniqueOrThrow({
+    where: { email },
+  });
+  if (userData.role !== UserRole.ADMIN)
+    throw new Error("Only admins can delete categories.");
+
+  // OPTIONAL: CHECK IF THE CATEGORY EXISTS
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId },
+  });
+
+  if (!category) throw new Error("Category not found.");
+
+  // OPTIONAL: CHECK IF ANY POSTS ARE USING THIS CATEGORY BEFORE DELETION
+  const hasPosts = await prisma.foodPost.findFirst({
+    where: { categoryId },
+  });
+
+  if (hasPosts)
+    throw new Error("Cannot delete category with associated posts.");
+
+  // DELETE THE CATEGORY
+  await prisma.category.delete({
+    where: { id: categoryId },
+  });
+
+  return { message: "Category deleted successfully." };
 };
 
 export const CategoryService = {
-	createCategory,
-	getCategories,
+  createCategory,
+  getCategories,
+
+  deleteCategoryById,
 };

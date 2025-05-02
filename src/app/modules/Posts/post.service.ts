@@ -3,7 +3,7 @@ import prisma from "../../../share/prisma";
 import { Request } from "express";
 import { IAuthUser } from "../../interfaces/common";
 import { IFile } from "../../interfaces/file";
-import { PostStatus, Prisma, UserRole } from "@prisma/client";
+import { PostStatus, Prisma, UserRole, UserStatus } from "@prisma/client";
 import { paginationHelper } from "../../../helpers/paginationHelper";
 import { IPaginationOptions } from "../../interfaces/pagination";
 
@@ -177,6 +177,7 @@ const getPosts = async (
     maxPrice?: number;
     category?: string;
     role?: UserRole;
+    status?: UserStatus;
   },
   options: IPaginationOptions
 ) => {
@@ -239,6 +240,15 @@ const getPosts = async (
       user: {
         role: filters.role,
       },
+    });
+  }
+  console.log(filters);
+  if (
+    filters.status &&
+    Object.values(PostStatus).includes(filters.status as PostStatus)
+  ) {
+    andConditions.push({
+      status: filters.status as PostStatus,
     });
   }
 
