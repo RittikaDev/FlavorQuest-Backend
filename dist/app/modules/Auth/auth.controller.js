@@ -17,12 +17,15 @@ const auth_service_1 = require("./auth.service");
 const http_status_1 = __importDefault(require("http-status"));
 const catchAsync_1 = __importDefault(require("../../../share/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../share/sendResponse"));
+const config_1 = __importDefault(require("../../../config"));
 const loginUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield auth_service_1.AuthServices.loginUser(req.body);
     const { refreshToken } = result;
     res.cookie("refreshToken", refreshToken, {
-        secure: false,
+        secure: config_1.default.node_env === "production",
         httpOnly: true,
+        sameSite: "none",
+        maxAge: 1000 * 60 * 60 * 24 * 30,
     });
     (0, sendResponse_1.default)(res, {
         status: http_status_1.default.OK,
