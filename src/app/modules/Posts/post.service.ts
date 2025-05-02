@@ -145,18 +145,26 @@ const updatePostStatus = async (
     adminComment: string;
   }>
 ) => {
-  if (data.isPremium && data.status !== PostStatus.APPROVED)
+  const existingPost = await prisma.foodPost.findUniqueOrThrow({
+    where: { id: postId },
+  });
+
+  // DETERMINE THE FINAL STATUS TO USE (NEW ONE FROM `DATA`, OR EXISTING)
+  const finalStatus = data.status ?? existingPost.status;
+  console.log(finalStatus);
+  // IF TRYING TO SET ISPREMIUM TO TRUE, MAKE SURE POST IS APPROVED
+  if (data.isPremium && finalStatus !== PostStatus.APPROVED) {
     throw new Error(
       "Post must be approved before it can be marked as premium."
     );
+  }
 
   return prisma.foodPost.update({
     where: { id: postId },
     data: {
-      ...data,
-      status: data.status as PostStatus | undefined,
-      adminComment: data.adminComment,
+      status: data.status,
       isPremium: data.isPremium,
+      adminComment: data.adminComment,
     },
   });
 };

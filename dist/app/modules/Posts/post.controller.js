@@ -46,6 +46,7 @@ const updatePostByUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 
 const updatePost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const postId = req.params.id;
     const { status, isPremium, adminComment } = req.body;
+    // console.log(status);
     const updateData = {};
     if (status)
         updateData.status = status;

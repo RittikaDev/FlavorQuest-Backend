@@ -127,11 +127,24 @@ const getPostById = (id) => __awaiter(void 0, void 0, void 0, function* () {
 });
 // ADMIN CAN APPROVE, REJECT OR MAKE A POST PREMIUM
 const updatePostStatus = (postId, data) => __awaiter(void 0, void 0, void 0, function* () {
-    if (data.isPremium && data.status !== client_1.PostStatus.APPROVED)
+    var _a;
+    const existingPost = yield prisma_1.default.foodPost.findUniqueOrThrow({
+        where: { id: postId },
+    });
+    // DETERMINE THE FINAL STATUS TO USE (NEW ONE FROM `DATA`, OR EXISTING)
+    const finalStatus = (_a = data.status) !== null && _a !== void 0 ? _a : existingPost.status;
+    console.log(finalStatus);
+    // IF TRYING TO SET ISPREMIUM TO TRUE, MAKE SURE POST IS APPROVED
+    if (data.isPremium && finalStatus !== client_1.PostStatus.APPROVED) {
         throw new Error("Post must be approved before it can be marked as premium.");
+    }
     return prisma_1.default.foodPost.update({
         where: { id: postId },
-        data: Object.assign(Object.assign({}, data), { status: data.status, adminComment: data.adminComment, isPremium: data.isPremium }),
+        data: {
+            status: data.status,
+            isPremium: data.isPremium,
+            adminComment: data.adminComment,
+        },
     });
 });
 const getPosts = (user, filters, options) => __awaiter(void 0, void 0, void 0, function* () {

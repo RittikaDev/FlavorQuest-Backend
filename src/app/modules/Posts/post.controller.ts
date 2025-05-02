@@ -49,6 +49,7 @@ const updatePostByUser = catchAsync(
 const updatePost = catchAsync(async (req: Request, res: Response) => {
   const postId = req.params.id;
   const { status, isPremium, adminComment } = req.body;
+  // console.log(status);
 
   const updateData: Partial<{
     status: PostStatus;
