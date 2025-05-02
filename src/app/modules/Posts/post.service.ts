@@ -56,11 +56,15 @@ const createPost = async (user: IAuthUser, req: Request) => {
 };
 
 // UPDATE POST
-const updatePostByUser = async (user: IAuthUser, req: Request) => {
-  const { id, title, description, location, minPrice, maxPrice, categoryId } =
+const updatePostByUser = async (
+  user: IAuthUser,
+  req: Request,
+  postId: string
+) => {
+  const { title, description, location, minPrice, maxPrice, categoryId } =
     req.body;
 
-  console.log(id);
+  console.log(postId);
 
   // USER DATA
   const userData = await prisma.user.findUniqueOrThrow({
@@ -69,7 +73,7 @@ const updatePostByUser = async (user: IAuthUser, req: Request) => {
 
   // GET THE EXISTING POST
   const existingPost = await prisma.foodPost.findUniqueOrThrow({
-    where: { id },
+    where: { id: postId },
   });
 
   // ENSURE THE LOGGED-IN USER OWNS THE POST
@@ -90,7 +94,7 @@ const updatePostByUser = async (user: IAuthUser, req: Request) => {
   if (file) updatedImage = file.path;
 
   const updatedPost = await prisma.foodPost.update({
-    where: { id },
+    where: { id: postId },
     data: {
       title,
       description,
@@ -113,6 +117,23 @@ const updatePostByUser = async (user: IAuthUser, req: Request) => {
   });
 
   return updatedPost;
+};
+
+// GET POST BY ID
+const getPostById = async (id: string) => {
+  const post = await prisma.foodPost.findUnique({
+    where: { id },
+    include: {
+      user: true,
+      category: true,
+      ratings: true,
+      votes: true,
+    },
+  });
+
+  if (!post) throw new Error("Post not found");
+
+  return post;
 };
 
 // ADMIN CAN APPROVE, REJECT OR MAKE A POST PREMIUM
@@ -394,10 +415,91 @@ const getUserPosts = async (
   };
 };
 
+// USER DASHBOARD STATISTICS
+const getUserDashboardStats = async (userEmail: string) => {
+  const userData = await prisma.user.findUniqueOrThrow({
+    where: { email: userEmail },
+  });
+
+  console.log(userData);
+  // 1. GET ALL THE USER'S POSTS (ONLY IDS TO REDUCE LOAD)
+  const posts = await prisma.foodPost.findMany({
+    where: { userId: userData.id },
+    select: { id: true },
+  });
+
+  const postIds = posts.map((post) => post.id);
+
+  if (postIds.length === 0) {
+    return {
+      totalPosts: 0,
+      totalUpvotes: 0,
+      totalDownvotes: 0,
+      totalRatings: 0,
+      averageRating: 0,
+    };
+  }
+
+  // 2. GET TOTAL UPVOTES AND DOWNVOTES ACROSS THESE POSTS
+  const votes = await prisma.vote.findMany({
+    where: { postId: { in: postIds } },
+    select: { type: true },
+  });
+
+  const totalUpvotes = votes.filter((v) => v.type === "UPVOTE").length;
+  const totalDownvotes = votes.filter((v) => v.type === "DOWNVOTE").length;
+
+  // 3. GET ALL RATINGS ACROSS THESE POSTS
+  const ratings = await prisma.rating.findMany({
+    where: { postId: { in: postIds } },
+    select: { score: true },
+  });
+
+  const totalRatings = ratings.length;
+  const averageRating =
+    ratings.reduce((sum, r) => sum + r.score, 0) / (totalRatings || 1);
+
+  return {
+    totalPosts: postIds.length,
+    totalUpvotes,
+    totalDownvotes,
+    totalRatings,
+    averageRating: Number(averageRating.toFixed(2)),
+  };
+};
+
+const getAdminDashboardStats = async () => {
+  const [postCount, userCount, ratingData, commentCount] = await Promise.all([
+    prisma.foodPost.count(),
+    prisma.user.count(),
+    prisma.rating.aggregate({
+      _sum: {
+        score: true,
+      },
+      _avg: {
+        score: true,
+      },
+    }),
+    prisma.comment.count(),
+  ]);
+
+  return {
+    postCount,
+    userCount,
+    totalRating: ratingData._sum.score ?? 0,
+    averageRating: ratingData._avg.score ?? 0,
+    commentCount,
+  };
+};
+
 export const PostService = {
   createPost,
   updatePostByUser,
+  getPostById,
   updatePostStatus,
   getPosts,
   getUserPosts,
+
+  getUserDashboardStats,
+  getAdminDashboardStats,
 };

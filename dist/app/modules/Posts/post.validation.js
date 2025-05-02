@@ -11,7 +11,6 @@ const createPostValidation = zod_1.z.object({
     categoryId: zod_1.z.string().min(1, "Category is required"),
 });
 const updatePostValidation = zod_1.z.object({
-    id: zod_1.z.string().min(1, "Id is required").optional(),
     title: zod_1.z.string().min(1, "Title is required").optional(),
     description: zod_1.z.string().min(1, "Description is required").optional(),
     location: zod_1.z.string().min(1, "Location is required").optional(),

@@ -18,7 +18,7 @@ router.post(
   }
 );
 router.patch(
-  "/updateByUser",
+  "/updateByUser/:id",
   auth(UserRole.USER, UserRole.PREMIUM_USER),
   multerUpload.single("file"),
   (req: Request, res: Response, next: NextFunction) => {
@@ -29,6 +29,7 @@ router.patch(
 );
 
 router.patch("/update/:id", auth(UserRole.ADMIN), PostController.updatePost);
+router.get("/postById/:id", PostController.getPostById);
 // router.patch(
 //   "/updateByUser",
 //   auth(UserRole.USER, UserRole.PREMIUM_USER),
@@ -40,10 +41,17 @@ router.get(
   auth(UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN),
   PostController.getPosts
 );
+router.get("/user-posts", PostController.getUserPosts);
+
 router.get(
-  "/user-posts",
-  auth(UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN),
-  PostController.getUserPosts
+  "/user-stats",
+  auth(UserRole.USER, UserRole.PREMIUM_USER),
+  PostController.getUserDashboardStats
+);
+router.get(
+  "/admin-stats",
+  auth(UserRole.ADMIN),
+  PostController.getAdminDashboardStats
 );
 
 export const PostRoutes = router;

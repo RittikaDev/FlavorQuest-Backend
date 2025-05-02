@@ -59,16 +59,16 @@ const createPost = (user, req) => __awaiter(void 0, void 0, void 0, function* ()
     return post;
 });
 // UPDATE POST
-const updatePostByUser = (user, req) => __awaiter(void 0, void 0, void 0, function* () {
-    const { id, title, description, location, minPrice, maxPrice, categoryId } = req.body;
-    console.log(id);
+const updatePostByUser = (user, req, postId) => __awaiter(void 0, void 0, void 0, function* () {
+    const { title, description, location, minPrice, maxPrice, categoryId } = req.body;
+    console.log(postId);
     // USER DATA
     const userData = yield prisma_1.default.user.findUniqueOrThrow({
         where: { email: user === null || user === void 0 ? void 0 : user.email },
     });
     // GET THE EXISTING POST
     const existingPost = yield prisma_1.default.foodPost.findUniqueOrThrow({
-        where: { id },
+        where: { id: postId },
     });
     // ENSURE THE LOGGED-IN USER OWNS THE POST
     if (existingPost.userId !== userData.id)
@@ -87,7 +87,7 @@ const updatePostByUser = (user, req) => __awaiter(void 0, void 0, void 0, functi
     if (file)
         updatedImage = file.path;
     const updatedPost = yield prisma_1.default.foodPost.update({
-        where: { id },
+        where: { id: postId },
         data: {
             title,
             description,
@@ -109,6 +109,21 @@ const updatePostByUser = (user, req) => __awaiter(void 0, void 0, void 0, functi
         },
     });
     return updatedPost;
+});
+// GET POST BY ID
+const getPostById = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const post = yield prisma_1.default.foodPost.findUnique({
+        where: { id },
+        include: {
+            user: true,
+            category: true,
+            ratings: true,
+            votes: true,
+        },
+    });
+    if (!post)
+        throw new Error("Post not found");
+    return post;
 });
 // ADMIN CAN APPROVE, REJECT OR MAKE A POST PREMIUM
 const updatePostStatus = (postId, data) => __awaiter(void 0, void 0, void 0, function* () {
@@ -319,10 +334,79 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
         data: posts,
     };
 });
+// USER DASHBOARD STATISTICS
+const getUserDashboardStats = (userEmail) => __awaiter(void 0, void 0, void 0, function* () {
+    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+        where: { email: userEmail },
+    });
+    console.log(userData);
+    // 1. GET ALL THE USER'S POSTS (ONLY IDS TO REDUCE LOAD)
+    const posts = yield prisma_1.default.foodPost.findMany({
+        where: { userId: userData.id },
+        select: { id: true },
+    });
+    const postIds = posts.map((post) => post.id);
+    if (postIds.length === 0) {
+        return {
+            totalPosts: 0,
+            totalUpvotes: 0,
+            totalDownvotes: 0,
+            totalRatings: 0,
+            averageRating: 0,
+        };
+    }
+    // 2. GET TOTAL UPVOTES AND DOWNVOTES ACROSS THESE POSTS
+    const votes = yield prisma_1.default.vote.findMany({
+        where: { postId: { in: postIds } },
+        select: { type: true },
+    });
+    const totalUpvotes = votes.filter((v) => v.type === "UPVOTE").length;
+    const totalDownvotes = votes.filter((v) => v.type === "DOWNVOTE").length;
+    // 3. GET ALL RATINGS ACROSS THESE POSTS
+    const ratings = yield prisma_1.default.rating.findMany({
+        where: { postId: { in: postIds } },
+        select: { score: true },
+    });
+    const totalRatings = ratings.length;
+    const averageRating = ratings.reduce((sum, r) => sum + r.score, 0) / (totalRatings || 1);
+    return {
+        totalPosts: postIds.length,
+        totalUpvotes,
+        totalDownvotes,
+        totalRatings,
+        averageRating: Number(averageRating.toFixed(2)),
+    };
+});
+const getAdminDashboardStats = () => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const [postCount, userCount, ratingData, commentCount] = yield Promise.all([
+        prisma_1.default.foodPost.count(),
+        prisma_1.default.user.count(),
+        prisma_1.default.rating.aggregate({
+            _sum: {
+                score: true,
+            },
+            _avg: {
+                score: true,
+            },
+        }),
+        prisma_1.default.comment.count(),
+    ]);
+    return {
+        postCount,
+        userCount,
+        totalRating: (_a = ratingData._sum.score) !== null && _a !== void 0 ? _a : 0,
+        averageRating: (_b = ratingData._avg.score) !== null && _b !== void 0 ? _b : 0,
+        commentCount,
+    };
+});
 exports.PostService = {
     createPost,
     updatePostByUser,
+    getPostById,
     updatePostStatus,
     getPosts,
     getUserPosts,
+    getUserDashboardStats,
+    getAdminDashboardStats,
 };

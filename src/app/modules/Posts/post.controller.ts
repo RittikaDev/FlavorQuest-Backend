@@ -28,9 +28,13 @@ const createPost = catchAsync(
 const updatePostByUser = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
     const user = req.user;
-    console.log(req);
+    const postId = req.params.id;
 
-    const result = await PostService.updatePostByUser(user as IAuthUser, req);
+    const result = await PostService.updatePostByUser(
+      user as IAuthUser,
+      req,
+      postId
+    );
 
     sendResponse(res, {
       success: true,
@@ -84,6 +88,19 @@ const getPosts = catchAsync(
   }
 );
 
+const getPostById = catchAsync(async (req: Request, res: Response) => {
+  const postId = req.params.id;
+
+  const result = await PostService.getPostById(postId);
+
+  sendResponse(res, {
+    success: true,
+    status: httpStatus.OK,
+    message: "Specific post retrieved successfully",
+    data: result,
+  });
+});
+
 // UPDATE POST BY USER
 const getUserPosts = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
@@ -110,10 +127,55 @@ const getUserPosts = catchAsync(
   }
 );
 
+const getUserDashboardStats = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const userEmail = req.user?.email;
+    console.log(req.user);
+
+    const result = await PostService.getUserDashboardStats(userEmail!);
+    if (!result)
+      return sendResponse(res, {
+        success: false,
+        status: httpStatus.NOT_FOUND,
+        message: "No status found for this user!",
+        data: null,
+      });
+    sendResponse(res, {
+      success: true,
+      status: httpStatus.OK,
+      message: "User statistics retrieved successfully!",
+      data: result,
+    });
+  }
+);
+
+const getAdminDashboardStats = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const result = await PostService.getAdminDashboardStats();
+    if (!result)
+      return sendResponse(res, {
+        success: false,
+        status: httpStatus.NOT_FOUND,
+        message: "No status found for Admin!",
+        data: null,
+      });
+    sendResponse(res, {
+      success: true,
+      status: httpStatus.OK,
+      message: "Admin statistics retrieved successfully!",
+      data: result,
+    });
+  }
+);
+
 export const PostController = {
   createPost,
   updatePostByUser,
+  getPostById,
   updatePost,
   getPosts,
   getUserPosts,
+
+  getUserDashboardStats,
+  getAdminDashboardStats,
 };

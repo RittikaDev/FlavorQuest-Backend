@@ -33,8 +33,8 @@ const createPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
 // UPDATE POST BY USER
 const updatePostByUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = req.user;
-    console.log(req);
-    const result = yield post_service_1.PostService.updatePostByUser(user, req);
+    const postId = req.params.id;
+    const result = yield post_service_1.PostService.updatePostByUser(user, req, postId);
     (0, sendResponse_1.default)(res, {
         success: true,
         status: http_status_1.default.OK,
@@ -75,6 +75,16 @@ const getPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 
         data: result,
     });
 }));
+const getPostById = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const postId = req.params.id;
+    const result = yield post_service_1.PostService.getPostById(postId);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        status: http_status_1.default.OK,
+        message: "Specific post retrieved successfully",
+        data: result,
+    });
+}));
 // UPDATE POST BY USER
 const getUserPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -97,10 +107,48 @@ const getUserPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
         data: result,
     });
 }));
+const getUserDashboardStats = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const userEmail = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
+    console.log(req.user);
+    const result = yield post_service_1.PostService.getUserDashboardStats(userEmail);
+    if (!result)
+        return (0, sendResponse_1.default)(res, {
+            success: false,
+            status: http_status_1.default.NOT_FOUND,
+            message: "No status found for this user!",
+            data: null,
+        });
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        status: http_status_1.default.OK,
+        message: "User statistics retrieved successfully!",
+        data: result,
+    });
+}));
+const getAdminDashboardStats = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield post_service_1.PostService.getAdminDashboardStats();
+    if (!result)
+        return (0, sendResponse_1.default)(res, {
+            success: false,
+            status: http_status_1.default.NOT_FOUND,
+            message: "No status found for Admin!",
+            data: null,
+        });
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        status: http_status_1.default.OK,
+        message: "Admin statistics retrieved successfully!",
+        data: result,
+    });
+}));
 exports.PostController = {
     createPost,
     updatePostByUser,
+    getPostById,
     updatePost,
     getPosts,
     getUserPosts,
+    getUserDashboardStats,
+    getAdminDashboardStats,
 };
