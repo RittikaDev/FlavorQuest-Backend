@@ -346,6 +346,8 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
         include: {
             category: true,
             user: true,
+            ratings: true,
+            votes: true,
         },
     });
     const total = yield prisma_1.default.foodPost.count({
@@ -437,7 +439,7 @@ const deletePostById = (postId, email) => __awaiter(void 0, void 0, void 0, func
     const userData = yield prisma_1.default.user.findUniqueOrThrow({
         where: { email },
     });
-    console.log(post);
+    console.log(post, userData);
     // IF NOT ADMIN, ENSURE THE USER OWNS THE POST
     if (userData.role !== client_1.UserRole.ADMIN && post.userId !== userData.id)
         throw new Error("You are not authorized to delete this post.");

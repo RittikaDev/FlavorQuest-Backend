@@ -423,6 +423,8 @@ const getUserPosts = async (
     include: {
       category: true,
       user: true,
+      ratings: true,
+      votes: true,
     },
   });
 
@@ -530,7 +532,7 @@ const deletePostById = async (postId: string, email: string) => {
     where: { email },
   });
 
-  console.log(post);
+  console.log(post, userData);
 
   // IF NOT ADMIN, ENSURE THE USER OWNS THE POST
   if (userData.role !== UserRole.ADMIN && post.userId !== userData.id)
