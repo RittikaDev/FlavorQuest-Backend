@@ -17,7 +17,6 @@ const shurjopay_1 = __importDefault(require("shurjopay"));
 const config_1 = __importDefault(require("../../../config"));
 const shurjopay = new shurjopay_1.default();
 shurjopay.config(config_1.default.sp.sp_endpoint, config_1.default.sp.sp_username, config_1.default.sp.sp_password, config_1.default.sp.sp_prefix, config_1.default.sp.sp_return_url);
-// console.log(shurjopay);
 const makePaymentAsync = (paymentPayload) => __awaiter(void 0, void 0, void 0, function* () {
     return new Promise((resolve, reject) => {
         shurjopay.makePayment(paymentPayload, (response) => resolve(response), (error) => reject(error));

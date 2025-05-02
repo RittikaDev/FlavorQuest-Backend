@@ -24,8 +24,7 @@ const createSubscription = (userEmail, clientIp) => __awaiter(void 0, void 0, vo
     });
     if (!userDetails)
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found");
-    const amount = 500; // PREMIUM SUBSCRIPTION PRICE
-    //  PENDING SUBSCRIPTION IN DB
+    const amount = 999; // PREMIUM SUBSCRIPTION PRICE
     const subscription = yield prisma_1.default.subscription.create({
         data: {
             userId: userDetails.id,
