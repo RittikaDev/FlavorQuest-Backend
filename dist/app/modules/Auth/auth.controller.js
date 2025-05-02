@@ -37,6 +37,20 @@ const loginUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void
         },
     });
 }));
+const logoutUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    res.clearCookie("refreshToken", {
+        secure: config_1.default.node_env === "production",
+        httpOnly: true,
+        sameSite: "none",
+        maxAge: 1000 * 60 * 60 * 24 * 30,
+    });
+    (0, sendResponse_1.default)(res, {
+        status: http_status_1.default.OK,
+        success: true,
+        message: "Logged out successfully!",
+        data: null,
+    });
+}));
 const refreshToken = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { refreshToken } = req.cookies;
     const result = yield auth_service_1.AuthServices.refreshToken(refreshToken);
@@ -82,6 +96,7 @@ const resetPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
 }));
 exports.AuthController = {
     loginUser,
+    logoutUser,
     refreshToken,
     changePassword,
     forgotPassword,
