@@ -16,13 +16,17 @@ exports.PostService = void 0;
 const prisma_1 = __importDefault(require("../../../share/prisma"));
 const client_1 = require("@prisma/client");
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
+const http_status_1 = __importDefault(require("http-status"));
+const ApiError_1 = __importDefault(require("../../errors/ApiError"));
 // CREATE A POST
 const createPost = (user, req) => __awaiter(void 0, void 0, void 0, function* () {
     const { title, description, location, minPrice, maxPrice, categoryId } = req.body;
     // USER DATA
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    const userData = yield prisma_1.default.user.findUnique({
         where: { email: user === null || user === void 0 ? void 0 : user.email },
     });
+    if (!userData)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     // CHECK IF THE CATEGORYID EXISTS IN THE CATEGORY TABLE
     const categoryExists = yield prisma_1.default.category.findUnique({
         where: { id: categoryId },
@@ -63,13 +67,17 @@ const updatePostByUser = (user, req, postId) => __awaiter(void 0, void 0, void 0
     const { title, description, location, minPrice, maxPrice, categoryId } = req.body;
     console.log(postId);
     // USER DATA
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    const userData = yield prisma_1.default.user.findUnique({
         where: { email: user === null || user === void 0 ? void 0 : user.email },
     });
+    if (!userData)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     // GET THE EXISTING POST
-    const existingPost = yield prisma_1.default.foodPost.findUniqueOrThrow({
+    const existingPost = yield prisma_1.default.foodPost.findUnique({
         where: { id: postId },
     });
+    if (!existingPost)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "Post not found!");
     // ENSURE THE LOGGED-IN USER OWNS THE POST
     if (existingPost.userId !== userData.id)
         throw new Error("Unauthorized: You cannot update this post");
@@ -160,9 +168,11 @@ const getPostById = (id) => __awaiter(void 0, void 0, void 0, function* () {
 // ADMIN CAN APPROVE, REJECT OR MAKE A POST PREMIUM
 const updatePostStatus = (postId, data) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    const existingPost = yield prisma_1.default.foodPost.findUniqueOrThrow({
+    const existingPost = yield prisma_1.default.foodPost.findUnique({
         where: { id: postId },
     });
+    if (!existingPost)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "Post not found!");
     // DETERMINE THE FINAL STATUS TO USE (NEW ONE FROM `DATA`, OR EXISTING)
     const finalStatus = (_a = data.status) !== null && _a !== void 0 ? _a : existingPost.status;
     console.log(finalStatus);
@@ -183,9 +193,11 @@ const getPosts = (user, filters, options) => __awaiter(void 0, void 0, void 0, f
     const { limit, page, skip, sortBy, sortOrder } = paginationHelper_1.paginationHelper.calculatePagination(options);
     const andConditions = [];
     if (user) {
-        const userData = yield prisma_1.default.user.findUniqueOrThrow({
+        const userData = yield prisma_1.default.user.findUnique({
             where: { email: user.email },
         });
+        if (!userData)
+            throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
         if (userData.role !== client_1.UserRole.ADMIN) {
             andConditions.push({ status: "APPROVED" });
             if (userData.role !== client_1.UserRole.PREMIUM_USER)
@@ -320,9 +332,11 @@ const getPosts = (user, filters, options) => __awaiter(void 0, void 0, void 0, f
 });
 const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void 0, function* () {
     const { limit, page, skip, sortBy } = paginationHelper_1.paginationHelper.calculatePagination(options);
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    const userData = yield prisma_1.default.user.findUnique({
         where: { email },
     });
+    if (!userData)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     const andConditions = [{ userId: userData.id }];
     if (userData.role !== client_1.UserRole.PREMIUM_USER)
         andConditions.push({ isPremium: false });
@@ -443,10 +457,12 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
 });
 // USER DASHBOARD STATISTICS
 const getUserDashboardStats = (userEmail) => __awaiter(void 0, void 0, void 0, function* () {
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    const userData = yield prisma_1.default.user.findUnique({
         where: { email: userEmail },
     });
-    console.log(userData);
+    // console.log(userData);
+    if (!userData)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     // 1. GET ALL THE USER'S POSTS (ONLY IDS TO REDUCE LOAD)
     const posts = yield prisma_1.default.foodPost.findMany({
         where: { userId: userData.id },
@@ -514,9 +530,11 @@ const deletePostById = (postId, email) => __awaiter(void 0, void 0, void 0, func
     });
     if (!post)
         throw new Error("Post not found.");
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    const userData = yield prisma_1.default.user.findUnique({
         where: { email },
     });
+    if (!userData)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     if (userData.role !== client_1.UserRole.ADMIN && post.userId !== userData.id)
         throw new Error("You are not authorized to delete this post.");
     // Run all deletions in a transaction

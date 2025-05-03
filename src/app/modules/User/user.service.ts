@@ -14,8 +14,9 @@ import {
 } from "./user.constant";
 import pick from "../../../share/pick";
 
-import { fileUploader } from "../../../helpers/fileUploader";
 import { paginationHelper } from "../../../helpers/paginationHelper";
+import httpStatus from "http-status";
+import ApiError from "../../errors/ApiError";
 
 const createUser = async (req: Request) => {
   const existingUser = await prisma.user.findUnique({
@@ -66,7 +67,11 @@ const getAllUsers = async (req: Request) => {
   const { searchTerm, ...filterData } = filters;
 
   const andConditions: Prisma.UserWhereInput[] = [
-    // { status: UserStatus.ACTIVE },
+    {
+      NOT: {
+        status: UserStatus.DELETED,
+      },
+    },
   ];
 
   if (searchTerm) {
@@ -132,7 +137,7 @@ const getAllUsers = async (req: Request) => {
 };
 
 const getSpecificUser = async (req: Request) => {
-  const user = await prisma.user.findUniqueOrThrow({
+  const user = await prisma.user.findUnique({
     where: {
       id: req.params.userId,
     },
@@ -147,12 +152,14 @@ const getSpecificUser = async (req: Request) => {
     },
   });
 
+  if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
+
   return user;
 };
 
 const getMyProfile = async (req: Request & { user?: IAuthUser }) => {
   const userEmail = req.user?.email;
-  const userInfo = await prisma.user.findUniqueOrThrow({
+  const userInfo = await prisma.user.findUnique({
     where: {
       email: userEmail,
     },
@@ -167,6 +174,8 @@ const getMyProfile = async (req: Request & { user?: IAuthUser }) => {
     },
   });
 
+  if (!userInfo) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
+
   return userInfo;
 };
 
@@ -174,14 +183,14 @@ const updateUser = async (req: Request & { user?: IAuthUser }) => {
   try {
     const file = req.file as IFile | undefined;
 
-    const user = await prisma.user.findUniqueOrThrow({
+    const user = await prisma.user.findUnique({
       where: { email: req.user?.email },
       select: { id: true },
     });
 
-    console.log(user);
+    // console.log(user);
 
-    if (!user) throw new Error("User is Not Found");
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
 
     const updateData: Record<string, any> = { ...req.body };
     console.log(req, updateData);

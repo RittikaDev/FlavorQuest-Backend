@@ -55,12 +55,14 @@ const prisma_1 = __importDefault(require("../../../share/prisma"));
 const jwtHelpers_1 = require("../../../helpers/jwtHelpers");
 const ApiError_1 = __importDefault(require("../../errors/ApiError"));
 const loginUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    const userData = yield prisma_1.default.user.findUnique({
         where: {
             email: payload.email,
             status: client_1.UserStatus.ACTIVE,
         },
     });
+    if (!userData)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     const isCorrectPassword = yield bcrypt.compare(payload.password, userData.password);
     if (!isCorrectPassword)
         throw new Error("Password is incorrect!");
@@ -88,12 +90,14 @@ const refreshToken = (token) => __awaiter(void 0, void 0, void 0, function* () {
     catch (err) {
         throw new Error("You are not authorized!");
     }
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    const userData = yield prisma_1.default.user.findUnique({
         where: {
             email: decodedData.email,
             status: client_1.UserStatus.ACTIVE,
         },
     });
+    if (!userData)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     const accessToken = jwtHelpers_1.jwtHelpers.generateToken({
         email: userData.email,
         id: userData.id,
@@ -105,12 +109,14 @@ const refreshToken = (token) => __awaiter(void 0, void 0, void 0, function* () {
     };
 });
 const changePassword = (user, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    const userData = yield prisma_1.default.user.findUnique({
         where: {
             email: user.email,
             status: client_1.UserStatus.ACTIVE,
         },
     });
+    if (!userData)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     const isCorrectPassword = yield bcrypt.compare(payload.oldPassword, userData.password);
     if (!isCorrectPassword)
         throw new Error("Password is incorrect!");
@@ -129,12 +135,14 @@ const changePassword = (user, payload) => __awaiter(void 0, void 0, void 0, func
     };
 });
 const forgotPassword = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    const userData = yield prisma_1.default.user.findUnique({
         where: {
             email: payload.email,
             status: client_1.UserStatus.ACTIVE,
         },
     });
+    if (!userData)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     const resetPassToken = jwtHelpers_1.jwtHelpers.generateToken({ email: userData.email, role: userData.role }, config_1.default.jwt.reset_pass_secret, config_1.default.jwt.reset_pass_token_expires_in);
     const resetPassLink = config_1.default.reset_pass_link + `?userId=${userData.id}&token=${resetPassToken}`;
     yield (0, emailSender_1.default)(userData.email, `
@@ -158,12 +166,14 @@ const forgotPassword = (payload) => __awaiter(void 0, void 0, void 0, function* 
     `);
 });
 const resetPassword = (token, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    yield prisma_1.default.user.findUniqueOrThrow({
+    let userExists = yield prisma_1.default.user.findUnique({
         where: {
             id: payload.id,
             status: client_1.UserStatus.ACTIVE,
         },
     });
+    if (!userExists)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     const isValidToken = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.jwt.reset_pass_secret);
     if (!isValidToken)
         throw new ApiError_1.default(http_status_1.default.FORBIDDEN, "Forbidden!");

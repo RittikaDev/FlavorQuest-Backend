@@ -1,5 +1,7 @@
 import { Category, UserRole } from "@prisma/client";
 import prisma from "../../../share/prisma";
+import ApiError from "../../errors/ApiError";
+import httpStatus from "http-status";
 
 // Service to create a new category
 const createCategory = async (name: string) => {
@@ -16,9 +18,12 @@ const getCategories = async () => {
 };
 
 const deleteCategoryById = async (categoryId: string, email: string) => {
-  const userData = await prisma.user.findUniqueOrThrow({
+  const userData = await prisma.user.findUnique({
     where: { email },
   });
+
+  if (!userData) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
+
   if (userData.role !== UserRole.ADMIN)
     throw new Error("Only admins can delete categories.");
 

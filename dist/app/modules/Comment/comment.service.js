@@ -16,10 +16,14 @@ exports.CommentService = void 0;
 const client_1 = require("@prisma/client");
 const prisma_1 = __importDefault(require("../../../share/prisma"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
+const http_status_1 = __importDefault(require("http-status"));
+const ApiError_1 = __importDefault(require("../../errors/ApiError"));
 const createComment = (userEmail, postId, text) => __awaiter(void 0, void 0, void 0, function* () {
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    const userData = yield prisma_1.default.user.findUnique({
         where: { email: userEmail },
     });
+    if (!userData)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     // console.log("User Data: ", userData);
     // console.log("post Data: ", postId);
     return yield prisma_1.default.comment.create({
@@ -66,9 +70,11 @@ const deleteCommentById = (commentId, email) => __awaiter(void 0, void 0, void 0
     if (!commentId)
         throw new Error("Comment ID is required.");
     // GET THE USER TRYING TO DELETE THE COMMENT
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    const userData = yield prisma_1.default.user.findUnique({
         where: { email },
     });
+    if (!userData)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     // FIND THE COMMENT
     const comment = yield prisma_1.default.comment.findUnique({
         where: { id: commentId },

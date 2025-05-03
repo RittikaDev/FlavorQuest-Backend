@@ -63,6 +63,8 @@ const client_1 = require("@prisma/client");
 const user_constant_1 = require("./user.constant");
 const pick_1 = __importDefault(require("../../../share/pick"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
+const http_status_1 = __importDefault(require("http-status"));
+const ApiError_1 = __importDefault(require("../../errors/ApiError"));
 const createUser = (req) => __awaiter(void 0, void 0, void 0, function* () {
     const existingUser = yield prisma_1.default.user.findUnique({
         where: {
@@ -105,7 +107,11 @@ const getAllUsers = (req) => __awaiter(void 0, void 0, void 0, function* () {
     const { page, limit, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
     const { searchTerm } = filters, filterData = __rest(filters, ["searchTerm"]);
     const andConditions = [
-    // { status: UserStatus.ACTIVE },
+        {
+            NOT: {
+                status: client_1.UserStatus.DELETED,
+            },
+        },
     ];
     if (searchTerm) {
         andConditions.push({
@@ -161,7 +167,7 @@ const getAllUsers = (req) => __awaiter(void 0, void 0, void 0, function* () {
     };
 });
 const getSpecificUser = (req) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield prisma_1.default.user.findUniqueOrThrow({
+    const user = yield prisma_1.default.user.findUnique({
         where: {
             id: req.params.userId,
         },
@@ -175,12 +181,14 @@ const getSpecificUser = (req) => __awaiter(void 0, void 0, void 0, function* () 
             status: true,
         },
     });
+    if (!user)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     return user;
 });
 const getMyProfile = (req) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const userEmail = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
-    const userInfo = yield prisma_1.default.user.findUniqueOrThrow({
+    const userInfo = yield prisma_1.default.user.findUnique({
         where: {
             email: userEmail,
         },
@@ -194,19 +202,21 @@ const getMyProfile = (req) => __awaiter(void 0, void 0, void 0, function* () {
             status: true,
         },
     });
+    if (!userInfo)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     return userInfo;
 });
 const updateUser = (req) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         const file = req.file;
-        const user = yield prisma_1.default.user.findUniqueOrThrow({
+        const user = yield prisma_1.default.user.findUnique({
             where: { email: (_a = req.user) === null || _a === void 0 ? void 0 : _a.email },
             select: { id: true },
         });
-        console.log(user);
+        // console.log(user);
         if (!user)
-            throw new Error("User is Not Found");
+            throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
         const updateData = Object.assign({}, req.body);
         console.log(req, updateData);
         if (file)

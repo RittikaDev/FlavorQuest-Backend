@@ -6,6 +6,8 @@ import { IFile } from "../../interfaces/file";
 import { PostStatus, Prisma, UserRole, UserStatus } from "@prisma/client";
 import { paginationHelper } from "../../../helpers/paginationHelper";
 import { IPaginationOptions } from "../../interfaces/pagination";
+import httpStatus from "http-status";
+import ApiError from "../../errors/ApiError";
 
 // CREATE A POST
 const createPost = async (user: IAuthUser, req: Request) => {
@@ -13,9 +15,11 @@ const createPost = async (user: IAuthUser, req: Request) => {
     req.body;
 
   // USER DATA
-  const userData = await prisma.user.findUniqueOrThrow({
+  const userData = await prisma.user.findUnique({
     where: { email: user?.email },
   });
+
+  if (!userData) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
 
   // CHECK IF THE CATEGORYID EXISTS IN THE CATEGORY TABLE
   const categoryExists = await prisma.category.findUnique({
@@ -67,14 +71,19 @@ const updatePostByUser = async (
   console.log(postId);
 
   // USER DATA
-  const userData = await prisma.user.findUniqueOrThrow({
+  const userData = await prisma.user.findUnique({
     where: { email: user?.email },
   });
 
+  if (!userData) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
+
   // GET THE EXISTING POST
-  const existingPost = await prisma.foodPost.findUniqueOrThrow({
+  const existingPost = await prisma.foodPost.findUnique({
     where: { id: postId },
   });
+
+  if (!existingPost)
+    throw new ApiError(httpStatus.NOT_FOUND, "Post not found!");
 
   // ENSURE THE LOGGED-IN USER OWNS THE POST
   if (existingPost.userId !== userData.id)
@@ -188,9 +197,12 @@ const updatePostStatus = async (
     adminComment: string;
   }>
 ) => {
-  const existingPost = await prisma.foodPost.findUniqueOrThrow({
+  const existingPost = await prisma.foodPost.findUnique({
     where: { id: postId },
   });
+
+  if (!existingPost)
+    throw new ApiError(httpStatus.NOT_FOUND, "Post not found!");
 
   // DETERMINE THE FINAL STATUS TO USE (NEW ONE FROM `DATA`, OR EXISTING)
   const finalStatus = data.status ?? existingPost.status;
@@ -230,9 +242,12 @@ const getPosts = async (
   const andConditions: Prisma.FoodPostWhereInput[] = [];
 
   if (user) {
-    const userData = await prisma.user.findUniqueOrThrow({
+    const userData = await prisma.user.findUnique({
       where: { email: user.email },
     });
+
+    if (!userData) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
+
     if (userData.role !== UserRole.ADMIN) {
       andConditions.push({ status: "APPROVED" });
       if (userData.role !== UserRole.PREMIUM_USER)
@@ -403,9 +418,11 @@ const getUserPosts = async (
   const { limit, page, skip, sortBy } =
     paginationHelper.calculatePagination(options);
 
-  const userData = await prisma.user.findUniqueOrThrow({
+  const userData = await prisma.user.findUnique({
     where: { email },
   });
+
+  if (!userData) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
 
   const andConditions: Prisma.FoodPostWhereInput[] = [{ userId: userData.id }];
 
@@ -554,11 +571,13 @@ const getUserPosts = async (
 
 // USER DASHBOARD STATISTICS
 const getUserDashboardStats = async (userEmail: string) => {
-  const userData = await prisma.user.findUniqueOrThrow({
+  const userData = await prisma.user.findUnique({
     where: { email: userEmail },
   });
 
-  console.log(userData);
+  // console.log(userData);
+
+  if (!userData) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
   // 1. GET ALL THE USER'S POSTS (ONLY IDS TO REDUCE LOAD)
   const posts = await prisma.foodPost.findMany({
     where: { userId: userData.id },
@@ -637,9 +656,11 @@ const deletePostById = async (postId: string, email: string) => {
 
   if (!post) throw new Error("Post not found.");
 
-  const userData = await prisma.user.findUniqueOrThrow({
+  const userData = await prisma.user.findUnique({
     where: { email },
   });
+
+  if (!userData) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
 
   if (userData.role !== UserRole.ADMIN && post.userId !== userData.id)
     throw new Error("You are not authorized to delete this post.");

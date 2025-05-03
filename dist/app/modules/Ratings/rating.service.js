@@ -13,11 +13,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RatingServices = void 0;
+const http_status_1 = __importDefault(require("http-status"));
 const prisma_1 = __importDefault(require("../../../share/prisma"));
+const ApiError_1 = __importDefault(require("../../errors/ApiError"));
 const upsertRating = (userEmail, postId, score) => __awaiter(void 0, void 0, void 0, function* () {
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    const userData = yield prisma_1.default.user.findUnique({
         where: { email: userEmail },
     });
+    if (!userData)
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     return yield prisma_1.default.rating.upsert({
         where: {
             userId_postId: {

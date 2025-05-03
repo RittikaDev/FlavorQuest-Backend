@@ -2,15 +2,18 @@ import { UserRole } from "@prisma/client";
 import prisma from "../../../share/prisma";
 import { IPaginationOptions } from "../../interfaces/pagination";
 import { paginationHelper } from "../../../helpers/paginationHelper";
+import httpStatus from "http-status";
+import ApiError from "../../errors/ApiError";
 
 const createComment = async (
   userEmail: string,
   postId: string,
   text: string
 ) => {
-  const userData = await prisma.user.findUniqueOrThrow({
+  const userData = await prisma.user.findUnique({
     where: { email: userEmail },
   });
+  if (!userData) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
 
   // console.log("User Data: ", userData);
   // console.log("post Data: ", postId);
@@ -67,9 +70,11 @@ const deleteCommentById = async (commentId: string, email: string) => {
   if (!commentId) throw new Error("Comment ID is required.");
 
   // GET THE USER TRYING TO DELETE THE COMMENT
-  const userData = await prisma.user.findUniqueOrThrow({
+  const userData = await prisma.user.findUnique({
     where: { email },
   });
+
+  if (!userData) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
 
   // FIND THE COMMENT
   const comment = await prisma.comment.findUnique({
