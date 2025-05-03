@@ -13,7 +13,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CommentService = void 0;
+const client_1 = require("@prisma/client");
 const prisma_1 = __importDefault(require("../../../share/prisma"));
+const paginationHelper_1 = require("../../../helpers/paginationHelper");
 const createComment = (userEmail, postId, text) => __awaiter(void 0, void 0, void 0, function* () {
     const userData = yield prisma_1.default.user.findUniqueOrThrow({
         where: { email: userEmail },
@@ -28,23 +30,62 @@ const createComment = (userEmail, postId, text) => __awaiter(void 0, void 0, voi
         },
     });
 });
-const getCommentsByPostId = (postId) => __awaiter(void 0, void 0, void 0, function* () {
+const getCommentsByPostId = (options, postId) => __awaiter(void 0, void 0, void 0, function* () {
     const whereClause = postId ? { postId } : {}; // IF POSTID IS PROVIDED, FILTER BY IT, OTHERWISE GET ALL
-    return yield prisma_1.default.comment.findMany({
-        where: whereClause,
-        include: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    profilePhoto: true,
+    const { limit, page, skip, sortBy, sortOrder } = paginationHelper_1.paginationHelper.calculatePagination(options);
+    const [comments, total] = yield Promise.all([
+        prisma_1.default.comment.findMany({
+            where: whereClause,
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        profilePhoto: true,
+                    },
                 },
             },
+            orderBy: {
+                [sortBy]: sortOrder,
+            },
+            skip,
+            take: limit,
+        }),
+        prisma_1.default.comment.count({ where: whereClause }),
+    ]);
+    return {
+        meta: {
+            total,
+            page,
+            limit,
         },
-        orderBy: { createdAt: "desc" },
+        data: comments,
+    };
+});
+const deleteCommentById = (commentId, email) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!commentId)
+        throw new Error("Comment ID is required.");
+    // GET THE USER TRYING TO DELETE THE COMMENT
+    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+        where: { email },
     });
+    // FIND THE COMMENT
+    const comment = yield prisma_1.default.comment.findUnique({
+        where: { id: commentId },
+    });
+    if (!comment)
+        throw new Error("Comment not found.");
+    // IF NOT ADMIN, ONLY ALLOW THE COMMENT OWNER TO DELETE
+    if (userData.role !== client_1.UserRole.ADMIN && comment.userId !== userData.id)
+        throw new Error("You are not authorized to delete this comment.");
+    // DELETE THE COMMENT
+    yield prisma_1.default.comment.delete({
+        where: { id: commentId },
+    });
+    return { message: "Comment deleted successfully." };
 });
 exports.CommentService = {
     createComment,
     getCommentsByPostId,
+    deleteCommentById,
 };

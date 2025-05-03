@@ -17,6 +17,7 @@ const http_status_1 = __importDefault(require("http-status"));
 const comment_service_1 = require("./comment.service");
 const catchAsync_1 = __importDefault(require("../../../share/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../../share/sendResponse"));
+const pick_1 = __importDefault(require("../../../share/pick"));
 const createComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const userEmail = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
@@ -32,15 +33,36 @@ const createComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
 }));
 const getPostComments = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { postId } = req.params;
-    const result = yield comment_service_1.CommentService.getCommentsByPostId(postId);
+    const options = (0, pick_1.default)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+    const result = yield comment_service_1.CommentService.getCommentsByPostId(options, postId);
     (0, sendResponse_1.default)(res, {
         success: true,
         status: http_status_1.default.OK,
-        message: "Post retrieved successfully!",
+        message: "Comment retrieved successfully!",
         data: result,
+    });
+}));
+const deleteCommentById = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const userEmail = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
+    const commentId = req.params.commentId;
+    const result = yield comment_service_1.CommentService.deleteCommentById(commentId, userEmail);
+    if (!result)
+        return (0, sendResponse_1.default)(res, {
+            success: false,
+            status: http_status_1.default.NOT_FOUND,
+            message: "No comment found with this ID!",
+            data: null,
+        });
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        status: http_status_1.default.OK,
+        message: "Comment deleted successfully!",
+        data: null,
     });
 }));
 exports.CommentController = {
     createComment,
     getPostComments,
+    deleteCommentById,
 };

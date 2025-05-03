@@ -105,7 +105,7 @@ const getAllUsers = (req) => __awaiter(void 0, void 0, void 0, function* () {
     const { page, limit, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
     const { searchTerm } = filters, filterData = __rest(filters, ["searchTerm"]);
     const andConditions = [
-        { status: client_1.UserStatus.ACTIVE },
+    // { status: UserStatus.ACTIVE },
     ];
     if (searchTerm) {
         andConditions.push({

@@ -58,19 +58,19 @@ const getCategories = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
 const deleteCategoryById = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const userEmail = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
-    const catId = req.params.id;
+    const catId = req.params.catId;
     const result = yield category_service_1.CategoryService.deleteCategoryById(catId, userEmail);
     if (!result)
         return (0, sendResponse_1.default)(res, {
             success: false,
             status: http_status_1.default.NOT_FOUND,
-            message: "No post found with this ID!",
+            message: "No category found with this ID!",
             data: null,
         });
     (0, sendResponse_1.default)(res, {
         success: true,
         status: http_status_1.default.OK,
-        message: "Post deleted successfully!",
+        message: "Category deleted successfully!",
         data: null,
     });
 }));

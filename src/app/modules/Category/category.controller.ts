@@ -48,21 +48,21 @@ const getCategories = catchAsync(async (req: Request, res: Response) => {
 const deleteCategoryById = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
     const userEmail = req.user?.email;
-    const catId = req.params.id;
+    const catId = req.params.catId;
 
     const result = await CategoryService.deleteCategoryById(catId, userEmail!);
     if (!result)
       return sendResponse(res, {
         success: false,
         status: httpStatus.NOT_FOUND,
-        message: "No post found with this ID!",
+        message: "No category found with this ID!",
         data: null,
       });
 
     sendResponse(res, {
       success: true,
       status: httpStatus.OK,
-      message: "Post deleted successfully!",
+      message: "Category deleted successfully!",
       data: null,
     });
   }

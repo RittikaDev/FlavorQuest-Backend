@@ -16,4 +16,5 @@ router.post("/:postId", (0, auth_1.default)(client_1.UserRole.USER, client_1.Use
 });
 router.get("/:postId", comment_controller_1.CommentController.getPostComments);
 router.get("/", comment_controller_1.CommentController.getPostComments);
+router.delete("/delete/:commentId", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER, client_1.UserRole.ADMIN), comment_controller_1.CommentController.deleteCommentById);
 exports.CommentRoutes = router;
