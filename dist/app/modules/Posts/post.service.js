@@ -323,7 +323,6 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
     }
     // PRICE RANGE FILTER
     if (filters.minPrice || filters.maxPrice) {
-        // Check if minPrice and maxPrice are valid and apply them in the where condition
         andConditions.push({
             AND: [
                 filters.minPrice
@@ -350,6 +349,16 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
             votes: true,
         },
     });
+    // ⬇️ Append averageRating and upvotesCount manually
+    const postsWithMetrics = yield Promise.all(posts.map((post) => __awaiter(void 0, void 0, void 0, function* () {
+        const averageRating = post.ratings.length > 0
+            ? post.ratings.reduce((sum, r) => sum + r.score, 0) /
+                post.ratings.length
+            : 0;
+        const upvotesCount = post.votes.filter((v) => v.type).length;
+        return Object.assign(Object.assign({}, post), { averageRating,
+            upvotesCount });
+    })));
     const total = yield prisma_1.default.foodPost.count({
         where: whereCondition,
     });
@@ -359,7 +368,7 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
             page,
             limit,
         },
-        data: posts,
+        data: postsWithMetrics,
     };
 });
 // USER DASHBOARD STATISTICS
