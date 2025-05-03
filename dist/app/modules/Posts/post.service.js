@@ -509,7 +509,6 @@ const getAdminDashboardStats = () => __awaiter(void 0, void 0, void 0, function*
 });
 // DELETE POST
 const deletePostById = (postId, email) => __awaiter(void 0, void 0, void 0, function* () {
-    // FIND THE POST FIRST
     const post = yield prisma_1.default.foodPost.findUnique({
         where: { id: postId },
     });
@@ -518,14 +517,15 @@ const deletePostById = (postId, email) => __awaiter(void 0, void 0, void 0, func
     const userData = yield prisma_1.default.user.findUniqueOrThrow({
         where: { email },
     });
-    console.log(post, userData);
-    // IF NOT ADMIN, ENSURE THE USER OWNS THE POST
     if (userData.role !== client_1.UserRole.ADMIN && post.userId !== userData.id)
         throw new Error("You are not authorized to delete this post.");
-    // DELETE THE POST
-    yield prisma_1.default.foodPost.delete({
-        where: { id: postId },
-    });
+    // Run all deletions in a transaction
+    yield prisma_1.default.$transaction([
+        prisma_1.default.comment.deleteMany({ where: { postId } }),
+        prisma_1.default.vote.deleteMany({ where: { postId } }),
+        prisma_1.default.rating.deleteMany({ where: { postId } }),
+        prisma_1.default.foodPost.delete({ where: { id: postId } }),
+    ]);
     return { message: "Post deleted successfully." };
 });
 exports.PostService = {
