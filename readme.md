@@ -1,11 +1,8 @@
+# FlavorQuest - Backend
 
-# Street Food Finder - Backend
+A RESTful API backend for the **FlavorQuest - Street Food Finder & Review Website**, where users can post, discover, and review street food spots. Premium users get access to exclusive food posts through subscription, and admins moderate all content.
 
-A RESTful API backend for the **Street Food Finder & Review Website**, where users can post, discover, and review street food spots. Premium users get access to exclusive food posts through subscription, and admins moderate all content.
-
-- [@Backend Live Link](https://dev.to/shafayat/-express-typescript-eslint-prettiersetup-5fhg)
-
-- [@Backend Video](https://blog.logrocket.com/linting-typescript-eslint-prettier/#setup-eslint)
+- [Live Link](https://flavor-quest-backend.vercel.app/)
 
 ## Features
 
@@ -75,8 +72,9 @@ cd FlavorQuest-Backend
 - npx prisma generate
 - npx prisma migrate dev --name init
 
-## start server 
+## start server
 - npm run dev
 
 
 
+```
