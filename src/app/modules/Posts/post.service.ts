@@ -128,12 +128,37 @@ const getPostById = async (id: string) => {
 			category: true,
 			ratings: true,
 			votes: true,
+			comments: true, // Include comments to count them
 		},
 	});
 
 	if (!post) throw new Error("Post not found");
 
-	return post;
+	// Compute average rating
+	const averageRating =
+		post.ratings.reduce((sum, rating) => sum + rating.score, 0) /
+		(post.ratings.length || 1);
+
+	// Compute vote counts
+	const upvoteCount = post.votes.filter(
+		(vote) => vote.type === "UPVOTE"
+	).length;
+	const downvoteCount = post.votes.filter(
+		(vote) => vote.type === "DOWNVOTE"
+	).length;
+	const totalVoteCount = post.votes.length;
+
+	// Compute comment count
+	const commentCount = post.comments.length;
+
+	return {
+		...post,
+		averageRating,
+		upvoteCount,
+		downvoteCount,
+		totalVoteCount,
+		commentCount,
+	};
 };
 
 // ADMIN CAN APPROVE, REJECT OR MAKE A POST PREMIUM
@@ -235,6 +260,7 @@ const getPosts = async (
 			},
 		});
 	}
+
 	if (filters.role) {
 		andConditions.push({
 			user: {
@@ -349,6 +375,8 @@ const getUserPosts = async (
 		minPrice?: number;
 		maxPrice?: number;
 		category?: string;
+		role?: UserRole;
+		status?: UserStatus;
 	},
 	options: IPaginationOptions
 ) => {
@@ -396,6 +424,23 @@ const getUserPosts = async (
 		});
 	}
 
+	if (filters.role) {
+		andConditions.push({
+			user: {
+				role: filters.role,
+			},
+		});
+	}
+
+	if (
+		filters.status &&
+		Object.values(PostStatus).includes(filters.status as PostStatus)
+	) {
+		andConditions.push({
+			status: filters.status as PostStatus,
+		});
+	}
+
 	// PRICE RANGE FILTER
 	if (filters.minPrice || filters.maxPrice) {
 		andConditions.push({
@@ -410,15 +455,17 @@ const getUserPosts = async (
 		});
 	}
 
-	const whereCondition: Prisma.FoodPostWhereInput = {
-		AND: andConditions,
-	};
+	const whereCondition: Prisma.FoodPostWhereInput =
+		andConditions.length > 0 ? { AND: andConditions } : {};
+
+	const isSortByRating = sortBy === "rating";
+	const isSortByUpvotes = sortBy === "upvotes";
+	const isSortByNewest = sortBy === "newest";
 
 	const posts = await prisma.foodPost.findMany({
 		where: whereCondition,
 		skip,
 		take: limit,
-		orderBy: { [sortBy]: sortOrder },
 		include: {
 			category: true,
 			user: true,
@@ -428,26 +475,45 @@ const getUserPosts = async (
 		},
 	});
 
-	// ⬇️ Append averageRating and upvotesCount manually
-	const postsWithMetrics = await Promise.all(
+	// Calculate the average rating and upvotes for each post
+	const postsWithRatingAndUpvotes = await Promise.all(
 		posts.map(async (post) => {
+			// Calculate average rating
+			const ratings = await prisma.rating.findMany({
+				where: { postId: post.id },
+				select: { score: true },
+			});
 			const averageRating =
-				post.ratings.length > 0
-					? post.ratings.reduce((sum, r) => sum + r.score, 0) /
-					  post.ratings.length
-					: 0;
+				ratings.reduce((sum, rating) => sum + rating.score, 0) /
+				(ratings.length || 1); // Avoid division by zero
 
-			const upvotesCount = post.votes.filter((v) => v.type).length;
-			const commentCount = post.comments.filter((v) => v.text).length;
+			// Calculate upvotes (assuming VoteType.UPVOTE represents upvotes)
+			const upvotesCount = post.votes.filter(
+				(vote) => vote.type === "UPVOTE"
+			).length;
 
 			return {
 				...post,
 				averageRating,
 				upvotesCount,
-				commentCount,
 			};
 		})
 	);
+
+	// Sort the posts based on the sort criteria (rating, upvotes, or newest)
+	const sortedPosts = postsWithRatingAndUpvotes.sort((a, b) => {
+		if (isSortByRating) {
+			return (b.averageRating || 0) - (a.averageRating || 0); // Sort by average rating
+		}
+		if (isSortByUpvotes) {
+			return b.upvotesCount - a.upvotesCount; // Sort by upvotes count
+		}
+		if (isSortByNewest) {
+			// Sort by createdAt to get the most recent post first
+			return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+		}
+		return 0; // Default sorting if none of the criteria match
+	});
 
 	const total = await prisma.foodPost.count({
 		where: whereCondition,
@@ -459,7 +525,7 @@ const getUserPosts = async (
 			page,
 			limit,
 		},
-		data: postsWithMetrics,
+		data: sortedPosts,
 	};
 };
 

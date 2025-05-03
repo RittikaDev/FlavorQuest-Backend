@@ -119,11 +119,25 @@ const getPostById = (id) => __awaiter(void 0, void 0, void 0, function* () {
             category: true,
             ratings: true,
             votes: true,
+            comments: true, // Include comments to count them
         },
     });
     if (!post)
         throw new Error("Post not found");
-    return post;
+    // Compute average rating
+    const averageRating = post.ratings.reduce((sum, rating) => sum + rating.score, 0) /
+        (post.ratings.length || 1);
+    // Compute vote counts
+    const upvoteCount = post.votes.filter((vote) => vote.type === "UPVOTE").length;
+    const downvoteCount = post.votes.filter((vote) => vote.type === "DOWNVOTE").length;
+    const totalVoteCount = post.votes.length;
+    // Compute comment count
+    const commentCount = post.comments.length;
+    return Object.assign(Object.assign({}, post), { averageRating,
+        upvoteCount,
+        downvoteCount,
+        totalVoteCount,
+        commentCount });
 });
 // ADMIN CAN APPROVE, REJECT OR MAKE A POST PREMIUM
 const updatePostStatus = (postId, data) => __awaiter(void 0, void 0, void 0, function* () {
@@ -321,6 +335,19 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
             },
         });
     }
+    if (filters.role) {
+        andConditions.push({
+            user: {
+                role: filters.role,
+            },
+        });
+    }
+    if (filters.status &&
+        Object.values(client_1.PostStatus).includes(filters.status)) {
+        andConditions.push({
+            status: filters.status,
+        });
+    }
     // PRICE RANGE FILTER
     if (filters.minPrice || filters.maxPrice) {
         andConditions.push({
@@ -334,14 +361,14 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
             ],
         });
     }
-    const whereCondition = {
-        AND: andConditions,
-    };
+    const whereCondition = andConditions.length > 0 ? { AND: andConditions } : {};
+    const isSortByRating = sortBy === "rating";
+    const isSortByUpvotes = sortBy === "upvotes";
+    const isSortByNewest = sortBy === "newest";
     const posts = yield prisma_1.default.foodPost.findMany({
         where: whereCondition,
         skip,
         take: limit,
-        orderBy: { [sortBy]: sortOrder },
         include: {
             category: true,
             user: true,
@@ -350,18 +377,34 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
             comments: true,
         },
     });
-    // ⬇️ Append averageRating and upvotesCount manually
-    const postsWithMetrics = yield Promise.all(posts.map((post) => __awaiter(void 0, void 0, void 0, function* () {
-        const averageRating = post.ratings.length > 0
-            ? post.ratings.reduce((sum, r) => sum + r.score, 0) /
-                post.ratings.length
-            : 0;
-        const upvotesCount = post.votes.filter((v) => v.type).length;
-        const commentCount = post.comments.filter((v) => v.text).length;
+    // Calculate the average rating and upvotes for each post
+    const postsWithRatingAndUpvotes = yield Promise.all(posts.map((post) => __awaiter(void 0, void 0, void 0, function* () {
+        // Calculate average rating
+        const ratings = yield prisma_1.default.rating.findMany({
+            where: { postId: post.id },
+            select: { score: true },
+        });
+        const averageRating = ratings.reduce((sum, rating) => sum + rating.score, 0) /
+            (ratings.length || 1); // Avoid division by zero
+        // Calculate upvotes (assuming VoteType.UPVOTE represents upvotes)
+        const upvotesCount = post.votes.filter((vote) => vote.type === "UPVOTE").length;
         return Object.assign(Object.assign({}, post), { averageRating,
-            upvotesCount,
-            commentCount });
+            upvotesCount });
     })));
+    // Sort the posts based on the sort criteria (rating, upvotes, or newest)
+    const sortedPosts = postsWithRatingAndUpvotes.sort((a, b) => {
+        if (isSortByRating) {
+            return (b.averageRating || 0) - (a.averageRating || 0); // Sort by average rating
+        }
+        if (isSortByUpvotes) {
+            return b.upvotesCount - a.upvotesCount; // Sort by upvotes count
+        }
+        if (isSortByNewest) {
+            // Sort by createdAt to get the most recent post first
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+        return 0; // Default sorting if none of the criteria match
+    });
     const total = yield prisma_1.default.foodPost.count({
         where: whereCondition,
     });
@@ -371,7 +414,7 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
             page,
             limit,
         },
-        data: postsWithMetrics,
+        data: sortedPosts,
     };
 });
 // USER DASHBOARD STATISTICS
