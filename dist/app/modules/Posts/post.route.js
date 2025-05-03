@@ -28,7 +28,8 @@ router.get("/postById/:id", post_controller_1.PostController.getPostById);
 //   auth(UserRole.USER, UserRole.PREMIUM_USER),
 //   PostController.updatePostByUser
 // );
-router.get("/", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER, client_1.UserRole.ADMIN), post_controller_1.PostController.getPosts);
+router.get("/", post_controller_1.PostController.getPosts);
+router.get("/admin-posts", (0, auth_1.default)(client_1.UserRole.ADMIN), post_controller_1.PostController.getAdminPosts);
 router.get("/user-posts", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER), post_controller_1.PostController.getUserPosts);
 router.get("/user-stats", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER), post_controller_1.PostController.getUserDashboardStats);
 router.get("/admin-stats", (0, auth_1.default)(client_1.UserRole.ADMIN), post_controller_1.PostController.getAdminDashboardStats);

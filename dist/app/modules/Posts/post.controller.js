@@ -63,6 +63,46 @@ const updatePost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     });
 }));
 const getPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const filters = (0, pick_1.default)(req.query, post_constants_1.postFilterableFields);
+    const options = (0, pick_1.default)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+    const result = yield post_service_1.PostService.getPosts(null, filters, options);
+    const isFiltering = Object.values(filters).some((val) => val !== undefined && val !== "");
+    if (result.data.length === 0) {
+        if (!isFiltering) {
+            // NO FILTERS AND NO DATA → RETURN 404
+            return (0, sendResponse_1.default)(res, {
+                success: false,
+                status: http_status_1.default.NOT_FOUND,
+                message: "No posts found!",
+                data: null,
+            });
+        }
+        else {
+            // FILTERS APPLIED BUT NO MATCH → RETURN 200 WITH EMPTY DATA
+            return (0, sendResponse_1.default)(res, {
+                success: true,
+                status: http_status_1.default.OK,
+                message: "No posts found matching your filters.",
+                data: {
+                    meta: {
+                        total: 0,
+                        page: options.page || 1,
+                        limit: options.limit || 10,
+                    },
+                    data: [],
+                },
+            });
+        }
+    }
+    // DATA EXISTS
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        status: http_status_1.default.OK,
+        message: "Posts retrieved successfully",
+        data: result,
+    });
+}));
+const getAdminPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = req.user;
     const filters = (0, pick_1.default)(req.query, post_constants_1.postFilterableFields);
     const options = (0, pick_1.default)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
@@ -218,6 +258,7 @@ exports.PostController = {
     getPostById,
     updatePost,
     getPosts,
+    getAdminPosts,
     getUserPosts,
     getUserDashboardStats,
     getAdminDashboardStats,

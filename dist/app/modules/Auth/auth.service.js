@@ -66,10 +66,12 @@ const loginUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
         throw new Error("Password is incorrect!");
     const accessToken = jwtHelpers_1.jwtHelpers.generateToken({
         email: userData.email,
+        id: userData.id,
         role: userData.role,
     }, config_1.default.jwt.jwt_secret, config_1.default.jwt.expires_in);
     const refreshToken = jwtHelpers_1.jwtHelpers.generateToken({
         email: userData.email,
+        id: userData.id,
         role: userData.role,
     }, config_1.default.jwt.refresh_token_secret, config_1.default.jwt.refresh_token_expires_in);
     return {
@@ -94,6 +96,7 @@ const refreshToken = (token) => __awaiter(void 0, void 0, void 0, function* () {
     });
     const accessToken = jwtHelpers_1.jwtHelpers.generateToken({
         email: userData.email,
+        id: userData.id,
         role: userData.role,
     }, config_1.default.jwt.jwt_secret, config_1.default.jwt.expires_in);
     return {

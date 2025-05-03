@@ -211,19 +211,21 @@ const getPosts = async (
 
 	const andConditions: Prisma.FoodPostWhereInput[] = [];
 
-	const userData = await prisma.user.findUniqueOrThrow({
-		where: { email: user?.email },
-	});
-
-	// ONLY APPLY STATUS FILTER IF NOT ADMIN
-	if (userData?.role !== UserRole.ADMIN) {
-		andConditions.push({ status: "APPROVED" });
-
-		// FILTER OUT PREMIUM POSTS IF USER IS NOT PREMIUM
-		if (userData?.role !== UserRole.PREMIUM_USER) {
-			andConditions.push({ isPremium: false });
+	if (user) {
+		const userData = await prisma.user.findUniqueOrThrow({
+			where: { email: user.email },
+		});
+		if (userData.role !== UserRole.ADMIN) {
+			andConditions.push({ status: "APPROVED" });
+			if (userData.role !== UserRole.PREMIUM_USER)
+				andConditions.push({ isPremium: false });
 		}
+	} else {
+		// ANONYMOUS USERS: SHOW ONLY PUBLIC, APPROVED, NON-PREMIUM POSTS
+		andConditions.push({ status: "APPROVED" });
+		andConditions.push({ isPremium: false });
 	}
+
 	// console.log(filters.searchTerm);
 	// SEARCHTERM FILTER (title or category name)
 	if (filters.searchTerm) {
@@ -380,7 +382,7 @@ const getUserPosts = async (
 	},
 	options: IPaginationOptions
 ) => {
-	const { limit, page, skip, sortBy, sortOrder } =
+	const { limit, page, skip, sortBy } =
 		paginationHelper.calculatePagination(options);
 
 	const userData = await prisma.user.findUniqueOrThrow({
@@ -388,6 +390,9 @@ const getUserPosts = async (
 	});
 
 	const andConditions: Prisma.FoodPostWhereInput[] = [{ userId: userData.id }];
+
+	if (userData.role !== UserRole.PREMIUM_USER)
+		andConditions.push({ isPremium: false });
 
 	// SEARCHTERM FILTER (title or category name)
 	if (filters.searchTerm) {

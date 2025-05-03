@@ -164,16 +164,20 @@ const updatePostStatus = (postId, data) => __awaiter(void 0, void 0, void 0, fun
 const getPosts = (user, filters, options) => __awaiter(void 0, void 0, void 0, function* () {
     const { limit, page, skip, sortBy, sortOrder } = paginationHelper_1.paginationHelper.calculatePagination(options);
     const andConditions = [];
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
-        where: { email: user === null || user === void 0 ? void 0 : user.email },
-    });
-    // ONLY APPLY STATUS FILTER IF NOT ADMIN
-    if ((userData === null || userData === void 0 ? void 0 : userData.role) !== client_1.UserRole.ADMIN) {
-        andConditions.push({ status: "APPROVED" });
-        // FILTER OUT PREMIUM POSTS IF USER IS NOT PREMIUM
-        if ((userData === null || userData === void 0 ? void 0 : userData.role) !== client_1.UserRole.PREMIUM_USER) {
-            andConditions.push({ isPremium: false });
+    if (user) {
+        const userData = yield prisma_1.default.user.findUniqueOrThrow({
+            where: { email: user.email },
+        });
+        if (userData.role !== client_1.UserRole.ADMIN) {
+            andConditions.push({ status: "APPROVED" });
+            if (userData.role !== client_1.UserRole.PREMIUM_USER)
+                andConditions.push({ isPremium: false });
         }
+    }
+    else {
+        // ANONYMOUS USERS: SHOW ONLY PUBLIC, APPROVED, NON-PREMIUM POSTS
+        andConditions.push({ status: "APPROVED" });
+        andConditions.push({ isPremium: false });
     }
     // console.log(filters.searchTerm);
     // SEARCHTERM FILTER (title or category name)
@@ -297,11 +301,13 @@ const getPosts = (user, filters, options) => __awaiter(void 0, void 0, void 0, f
     };
 });
 const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void 0, function* () {
-    const { limit, page, skip, sortBy, sortOrder } = paginationHelper_1.paginationHelper.calculatePagination(options);
+    const { limit, page, skip, sortBy } = paginationHelper_1.paginationHelper.calculatePagination(options);
     const userData = yield prisma_1.default.user.findUniqueOrThrow({
         where: { email },
     });
     const andConditions = [{ userId: userData.id }];
+    if (userData.role !== client_1.UserRole.PREMIUM_USER)
+        andConditions.push({ isPremium: false });
     // SEARCHTERM FILTER (title or category name)
     if (filters.searchTerm) {
         andConditions.push({

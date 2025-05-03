@@ -8,24 +8,24 @@ import { multerUpload } from "../../../config/multer.config";
 const router = express.Router();
 
 router.post(
-  "/",
-  auth(UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN),
-  multerUpload.single("file"),
-  (req: Request, res: Response, next: NextFunction) => {
-    const data = JSON.parse(req.body.data);
-    req.body = PostValidations.createPostValidation.parse(data);
-    return PostController.createPost(req, res, next);
-  }
+	"/",
+	auth(UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN),
+	multerUpload.single("file"),
+	(req: Request, res: Response, next: NextFunction) => {
+		const data = JSON.parse(req.body.data);
+		req.body = PostValidations.createPostValidation.parse(data);
+		return PostController.createPost(req, res, next);
+	}
 );
 router.patch(
-  "/updateByUser/:id",
-  auth(UserRole.USER, UserRole.PREMIUM_USER),
-  multerUpload.single("file"),
-  (req: Request, res: Response, next: NextFunction) => {
-    const data = JSON.parse(req.body.data);
-    req.body = PostValidations.updatePostValidation.parse(data);
-    return PostController.updatePostByUser(req, res, next);
-  }
+	"/updateByUser/:id",
+	auth(UserRole.USER, UserRole.PREMIUM_USER),
+	multerUpload.single("file"),
+	(req: Request, res: Response, next: NextFunction) => {
+		const data = JSON.parse(req.body.data);
+		req.body = PostValidations.updatePostValidation.parse(data);
+		return PostController.updatePostByUser(req, res, next);
+	}
 );
 
 router.patch("/update/:id", auth(UserRole.ADMIN), PostController.updatePost);
@@ -36,32 +36,29 @@ router.get("/postById/:id", PostController.getPostById);
 //   PostController.updatePostByUser
 // );
 
+router.get("/", PostController.getPosts);
+router.get("/admin-posts", auth(UserRole.ADMIN), PostController.getAdminPosts);
 router.get(
-  "/",
-  auth(UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN),
-  PostController.getPosts
-);
-router.get(
-  "/user-posts",
-  auth(UserRole.USER, UserRole.PREMIUM_USER),
-  PostController.getUserPosts
+	"/user-posts",
+	auth(UserRole.USER, UserRole.PREMIUM_USER),
+	PostController.getUserPosts
 );
 
 router.get(
-  "/user-stats",
-  auth(UserRole.USER, UserRole.PREMIUM_USER),
-  PostController.getUserDashboardStats
+	"/user-stats",
+	auth(UserRole.USER, UserRole.PREMIUM_USER),
+	PostController.getUserDashboardStats
 );
 router.get(
-  "/admin-stats",
-  auth(UserRole.ADMIN),
-  PostController.getAdminDashboardStats
+	"/admin-stats",
+	auth(UserRole.ADMIN),
+	PostController.getAdminDashboardStats
 );
 
 router.delete(
-  "/delete/:postId",
-  auth(UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN),
-  PostController.deletePostById
+	"/delete/:postId",
+	auth(UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN),
+	PostController.deletePostById
 );
 
 export const PostRoutes = router;
