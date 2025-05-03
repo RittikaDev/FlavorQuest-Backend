@@ -347,6 +347,7 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
             user: true,
             ratings: true,
             votes: true,
+            comments: true,
         },
     });
     // ⬇️ Append averageRating and upvotesCount manually
@@ -356,8 +357,10 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
                 post.ratings.length
             : 0;
         const upvotesCount = post.votes.filter((v) => v.type).length;
+        const commentCount = post.comments.filter((v) => v.text).length;
         return Object.assign(Object.assign({}, post), { averageRating,
-            upvotesCount });
+            upvotesCount,
+            commentCount });
     })));
     const total = yield prisma_1.default.foodPost.count({
         where: whereCondition,

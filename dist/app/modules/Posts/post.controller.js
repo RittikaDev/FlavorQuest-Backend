@@ -69,6 +69,35 @@ const getPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 
     if (!user)
         throw new Error("User is not authenticated");
     const result = yield post_service_1.PostService.getPosts(user, filters, options);
+    const isFiltering = Object.values(filters).some((val) => val !== undefined && val !== "");
+    if (result.data.length === 0) {
+        if (!isFiltering) {
+            // NO FILTERS AND NO DATA → RETURN 404
+            return (0, sendResponse_1.default)(res, {
+                success: false,
+                status: http_status_1.default.NOT_FOUND,
+                message: "No posts found!",
+                data: null,
+            });
+        }
+        else {
+            // FILTERS APPLIED BUT NO MATCH → RETURN 200 WITH EMPTY DATA
+            return (0, sendResponse_1.default)(res, {
+                success: true,
+                status: http_status_1.default.OK,
+                message: "No posts found matching your filters.",
+                data: {
+                    meta: {
+                        total: 0,
+                        page: options.page || 1,
+                        limit: options.limit || 10,
+                    },
+                    data: [],
+                },
+            });
+        }
+    }
+    // DATA EXISTS
     (0, sendResponse_1.default)(res, {
         success: true,
         status: http_status_1.default.OK,
@@ -90,17 +119,38 @@ const getPostById = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
 const getUserPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const userEmail = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
-    // console.log(req);
     const filters = (0, pick_1.default)(req.query, post_constants_1.postFilterableFields);
     const options = (0, pick_1.default)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
     const result = yield post_service_1.PostService.getUserPosts(userEmail, filters, options);
-    if (result.data.length === 0)
-        return (0, sendResponse_1.default)(res, {
-            success: false,
-            status: http_status_1.default.NOT_FOUND,
-            message: "No posts found for this user!",
-            data: null,
-        });
+    const isFiltering = Object.values(filters).some((val) => val !== undefined && val !== "");
+    if (result.data.length === 0) {
+        if (!isFiltering) {
+            // INITIAL LOAD (NO FILTERS/SEARCH APPLIED), RETURN 404
+            return (0, sendResponse_1.default)(res, {
+                success: false,
+                status: http_status_1.default.NOT_FOUND,
+                message: "No posts found for this user!",
+                data: null,
+            });
+        }
+        else {
+            // FILTERS/SEARCH APPLIED, BUT NO MATCHING RESULT FOUND — RETURN SUCCESS WITH EMPTY DATA
+            return (0, sendResponse_1.default)(res, {
+                success: true,
+                status: http_status_1.default.OK,
+                message: "No posts found matching your filters.",
+                data: {
+                    meta: {
+                        total: 0,
+                        page: options.page || 1,
+                        limit: options.limit || 10,
+                    },
+                    data: [],
+                },
+            });
+        }
+    }
+    // DATA EXISTS
     (0, sendResponse_1.default)(res, {
         success: true,
         status: http_status_1.default.OK,

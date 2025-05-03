@@ -424,6 +424,7 @@ const getUserPosts = async (
 			user: true,
 			ratings: true,
 			votes: true,
+			comments: true,
 		},
 	});
 
@@ -437,11 +438,13 @@ const getUserPosts = async (
 					: 0;
 
 			const upvotesCount = post.votes.filter((v) => v.type).length;
+			const commentCount = post.comments.filter((v) => v.text).length;
 
 			return {
 				...post,
 				averageRating,
 				upvotesCount,
+				commentCount,
 			};
 		})
 	);
