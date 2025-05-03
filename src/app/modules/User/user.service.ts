@@ -66,7 +66,7 @@ const createUser = async (req: Request) => {
 
 const getAllUsers = async (req: Request) => {
   const filters = pick(req.query, usersFilterableFields);
-  const options = pick(req.query, usersFilterableOptions);
+  const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
   const { page, limit, skip } = paginationHelper.calculatePagination(options);
   const { searchTerm, ...filterData } = filters;
 

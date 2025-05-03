@@ -103,7 +103,7 @@ const createUser = (req) => __awaiter(void 0, void 0, void 0, function* () {
 });
 const getAllUsers = (req) => __awaiter(void 0, void 0, void 0, function* () {
     const filters = (0, pick_1.default)(req.query, user_constant_1.usersFilterableFields);
-    const options = (0, pick_1.default)(req.query, user_constant_1.usersFilterableOptions);
+    const options = (0, pick_1.default)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
     const { page, limit, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
     const { searchTerm } = filters, filterData = __rest(filters, ["searchTerm"]);
     const andConditions = [

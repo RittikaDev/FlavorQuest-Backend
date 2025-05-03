@@ -1,10 +1,16 @@
-export const usersSearchAbleFields: string[] = ["name", "contactNumber"];
+export const usersSearchAbleFields: string[] = ["name", "email"];
 
 export const usersFilterableOptions: string[] = [
-	"limit",
-	"page",
-	"sortBy",
-	"sortOrder",
+  "limit",
+  "page",
+  "sortBy",
+  "sortOrder",
 ];
 
-export const usersFilterableFields: string[] = ["searchTerm", "role", "status"];
+export const usersFilterableFields: string[] = [
+  "searchTerm",
+  "role",
+  "status",
+  "name",
+  "email",
+];
