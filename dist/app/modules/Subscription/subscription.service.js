@@ -92,7 +92,7 @@ const verifyPayment = (orderId) => __awaiter(void 0, void 0, void 0, function* (
                 where: { transactionId: orderId },
             });
             if (!sub)
-                throw new Error("Subscription not found during transaction");
+                throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "Subscription not found during transaction");
             yield tx.user.update({
                 where: { id: sub.userId },
                 data: { role: client_1.UserRole.PREMIUM_USER },

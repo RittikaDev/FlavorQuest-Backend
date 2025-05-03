@@ -32,7 +32,7 @@ const createPost = (user, req) => __awaiter(void 0, void 0, void 0, function* ()
         where: { id: categoryId },
     });
     if (!categoryExists)
-        throw new Error("Invalid category ID");
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Invalid category ID");
     // FILE UPLOAD
     const file = req.file;
     let imagetoUpload = "";
@@ -80,14 +80,14 @@ const updatePostByUser = (user, req, postId) => __awaiter(void 0, void 0, void 0
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "Post not found!");
     // ENSURE THE LOGGED-IN USER OWNS THE POST
     if (existingPost.userId !== userData.id)
-        throw new Error("Unauthorized: You cannot update this post");
+        throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "You cannot update this post");
     //  CHECK IF CATEGORY ID EXISTS IF UPDATED
     if (categoryId) {
         const categoryExists = yield prisma_1.default.category.findUnique({
             where: { id: categoryId },
         });
         if (!categoryExists)
-            throw new Error("Invalid category ID");
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Invalid category ID");
     }
     // FILE UPLOAD
     const file = req.file;
@@ -149,7 +149,7 @@ const getPostById = (id) => __awaiter(void 0, void 0, void 0, function* () {
         },
     });
     if (!post)
-        throw new Error("Post not found");
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "Post not found");
     // Compute average rating
     const averageRating = post.ratings.reduce((sum, rating) => sum + rating.score, 0) /
         (post.ratings.length || 1);
@@ -178,7 +178,7 @@ const updatePostStatus = (postId, data) => __awaiter(void 0, void 0, void 0, fun
     console.log(finalStatus);
     // IF TRYING TO SET ISPREMIUM TO TRUE, MAKE SURE POST IS APPROVED
     if (data.isPremium && finalStatus !== client_1.PostStatus.APPROVED) {
-        throw new Error("Post must be approved before it can be marked as premium.");
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Post must be approved before it can be marked as premium.");
     }
     return prisma_1.default.foodPost.update({
         where: { id: postId },
@@ -529,14 +529,14 @@ const deletePostById = (postId, email) => __awaiter(void 0, void 0, void 0, func
         where: { id: postId },
     });
     if (!post)
-        throw new Error("Post not found.");
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "Post not found.");
     const userData = yield prisma_1.default.user.findUnique({
         where: { email },
     });
     if (!userData)
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     if (userData.role !== client_1.UserRole.ADMIN && post.userId !== userData.id)
-        throw new Error("You are not authorized to delete this post.");
+        throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "You are not authorized to delete this post.");
     // Run all deletions in a transaction
     yield prisma_1.default.$transaction([
         prisma_1.default.comment.deleteMany({ where: { postId } }),

@@ -65,7 +65,7 @@ const loginUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     const isCorrectPassword = yield bcrypt.compare(payload.password, userData.password);
     if (!isCorrectPassword)
-        throw new Error("Password is incorrect!");
+        throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "Password is incorrect");
     const accessToken = jwtHelpers_1.jwtHelpers.generateToken({
         email: userData.email,
         id: userData.id,
@@ -88,7 +88,7 @@ const refreshToken = (token) => __awaiter(void 0, void 0, void 0, function* () {
         decodedData = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.jwt.refresh_token_secret);
     }
     catch (err) {
-        throw new Error("You are not authorized!");
+        throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "You are not authorized!");
     }
     const userData = yield prisma_1.default.user.findUnique({
         where: {
@@ -119,7 +119,7 @@ const changePassword = (user, payload) => __awaiter(void 0, void 0, void 0, func
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     const isCorrectPassword = yield bcrypt.compare(payload.oldPassword, userData.password);
     if (!isCorrectPassword)
-        throw new Error("Password is incorrect!");
+        throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "Password is incorrect");
     const hashedPassword = yield bcrypt.hash(payload.newPassword, 12);
     yield prisma_1.default.user.update({
         where: {

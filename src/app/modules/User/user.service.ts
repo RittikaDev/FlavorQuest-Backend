@@ -26,7 +26,11 @@ const createUser = async (req: Request) => {
   });
 
   // If user exists, throw an error or handle it as needed
-  if (existingUser) throw new Error("User with this email already exists");
+  if (existingUser)
+    throw new ApiError(
+      httpStatus.CONFLICT,
+      "User with this email already exists"
+    );
 
   const file = req.file as IFile;
 
@@ -215,10 +219,17 @@ const deleteUser = async (req: Request) => {
       where: { id: userId },
     });
 
-    if (!existingUser) throw new Error("User can not be found");
+    if (!existingUser)
+      throw new ApiError(httpStatus.NOT_FOUND, "User can not be found!");
 
     if (existingUser.status === UserStatus.DELETED)
-      throw new Error("User is already marked as deleted");
+      throw new ApiError(
+        httpStatus.CONFLICT,
+        "User is already marked as deleted"
+      );
+
+    if (existingUser.role === "ADMIN")
+      throw new ApiError(httpStatus.FORBIDDEN, "Cannot block an admin user");
 
     const result = await prisma.user.update({
       where: { id: userId },
@@ -229,7 +240,10 @@ const deleteUser = async (req: Request) => {
 
     return result;
   } catch (err) {
-    throw new Error("An error occurred while marking the user as deleted");
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "An error occurred while marking the user as deleted"
+    );
   }
 };
 
@@ -240,10 +254,17 @@ const blockUser = async (req: Request) => {
         id: req.params.userId,
       },
     });
-    console.log(isNotExitsUser);
+    // console.log(isNotExitsUser);
     if (isNotExitsUser?.status === UserStatus.DELETED)
-      throw new Error("User is already marked as deleted, can not be blocked");
-    else if (!isNotExitsUser) throw new Error("User not found");
+      throw new ApiError(
+        httpStatus.CONFLICT,
+        "User is already marked as deleted, can not be blocked"
+      );
+    else if (!isNotExitsUser)
+      throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+
+    if (isNotExitsUser.role === "ADMIN")
+      throw new ApiError(httpStatus.FORBIDDEN, "Cannot block an admin user");
 
     const result = await prisma.user.update({
       where: {
@@ -259,7 +280,10 @@ const blockUser = async (req: Request) => {
 
     return result;
   } catch (err: any) {
-    throw new Error(err.message || "An unexpected error occurred");
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      err.message || "An unexpected error occurred"
+    );
   }
 };
 

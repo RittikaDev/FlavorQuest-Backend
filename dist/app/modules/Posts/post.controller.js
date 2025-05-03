@@ -19,6 +19,7 @@ const sendResponse_1 = __importDefault(require("../../../share/sendResponse"));
 const post_service_1 = require("./post.service");
 const pick_1 = __importDefault(require("../../../share/pick"));
 const post_constants_1 = require("./post.constants");
+const ApiError_1 = __importDefault(require("../../errors/ApiError"));
 // CREATE A POST
 const createPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = req.user;
@@ -107,7 +108,7 @@ const getAdminPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
     const filters = (0, pick_1.default)(req.query, post_constants_1.postFilterableFields);
     const options = (0, pick_1.default)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
     if (!user)
-        throw new Error("User is not authenticated");
+        throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "User is not authenticated");
     const result = yield post_service_1.PostService.getPosts(user, filters, options);
     const isFiltering = Object.values(filters).some((val) => val !== undefined && val !== "");
     if (result.data.length === 0) {

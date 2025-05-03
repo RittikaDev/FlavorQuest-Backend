@@ -25,7 +25,8 @@ const loginUser = async (payload: { email: string; password: string }) => {
     userData.password
   );
 
-  if (!isCorrectPassword) throw new Error("Password is incorrect!");
+  if (!isCorrectPassword)
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Password is incorrect");
 
   const accessToken = jwtHelpers.generateToken(
     {
@@ -62,7 +63,7 @@ const refreshToken = async (token: string) => {
       config.jwt.refresh_token_secret as Secret
     );
   } catch (err) {
-    throw new Error("You are not authorized!");
+    throw new ApiError(httpStatus.UNAUTHORIZED, "You are not authorized!");
   }
 
   const userData = await prisma.user.findUnique({
@@ -105,7 +106,8 @@ const changePassword = async (user: any, payload: any) => {
     userData.password
   );
 
-  if (!isCorrectPassword) throw new Error("Password is incorrect!");
+  if (!isCorrectPassword)
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Password is incorrect");
 
   const hashedPassword: string = await bcrypt.hash(payload.newPassword, 12);
 

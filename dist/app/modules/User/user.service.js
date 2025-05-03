@@ -73,7 +73,7 @@ const createUser = (req) => __awaiter(void 0, void 0, void 0, function* () {
     });
     // If user exists, throw an error or handle it as needed
     if (existingUser)
-        throw new Error("User with this email already exists");
+        throw new ApiError_1.default(http_status_1.default.CONFLICT, "User with this email already exists");
     const file = req.file;
     let profilePhoto = null;
     if (file)
@@ -238,9 +238,11 @@ const deleteUser = (req) => __awaiter(void 0, void 0, void 0, function* () {
             where: { id: userId },
         });
         if (!existingUser)
-            throw new Error("User can not be found");
+            throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User can not be found!");
         if (existingUser.status === client_1.UserStatus.DELETED)
-            throw new Error("User is already marked as deleted");
+            throw new ApiError_1.default(http_status_1.default.CONFLICT, "User is already marked as deleted");
+        if (existingUser.role === "ADMIN")
+            throw new ApiError_1.default(http_status_1.default.FORBIDDEN, "Cannot block an admin user");
         const result = yield prisma_1.default.user.update({
             where: { id: userId },
             data: {
@@ -250,7 +252,7 @@ const deleteUser = (req) => __awaiter(void 0, void 0, void 0, function* () {
         return result;
     }
     catch (err) {
-        throw new Error("An error occurred while marking the user as deleted");
+        throw new ApiError_1.default(http_status_1.default.INTERNAL_SERVER_ERROR, "An error occurred while marking the user as deleted");
     }
 });
 const blockUser = (req) => __awaiter(void 0, void 0, void 0, function* () {
@@ -260,11 +262,13 @@ const blockUser = (req) => __awaiter(void 0, void 0, void 0, function* () {
                 id: req.params.userId,
             },
         });
-        console.log(isNotExitsUser);
+        // console.log(isNotExitsUser);
         if ((isNotExitsUser === null || isNotExitsUser === void 0 ? void 0 : isNotExitsUser.status) === client_1.UserStatus.DELETED)
-            throw new Error("User is already marked as deleted, can not be blocked");
+            throw new ApiError_1.default(http_status_1.default.CONFLICT, "User is already marked as deleted, can not be blocked");
         else if (!isNotExitsUser)
-            throw new Error("User not found");
+            throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+        if (isNotExitsUser.role === "ADMIN")
+            throw new ApiError_1.default(http_status_1.default.FORBIDDEN, "Cannot block an admin user");
         const result = yield prisma_1.default.user.update({
             where: {
                 id: req.params.userId,
@@ -278,7 +282,7 @@ const blockUser = (req) => __awaiter(void 0, void 0, void 0, function* () {
         return result;
     }
     catch (err) {
-        throw new Error(err.message || "An unexpected error occurred");
+        throw new ApiError_1.default(http_status_1.default.INTERNAL_SERVER_ERROR, err.message || "An unexpected error occurred");
     }
 });
 exports.userServices = {

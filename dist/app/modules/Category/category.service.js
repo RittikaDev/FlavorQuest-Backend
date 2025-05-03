@@ -36,19 +36,19 @@ const deleteCategoryById = (categoryId, email) => __awaiter(void 0, void 0, void
     if (!userData)
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     if (userData.role !== client_1.UserRole.ADMIN)
-        throw new Error("Only admins can delete categories.");
+        throw new ApiError_1.default(http_status_1.default.FORBIDDEN, "Only admins can delete categories.");
     // OPTIONAL: CHECK IF THE CATEGORY EXISTS
     const category = yield prisma_1.default.category.findUnique({
         where: { id: categoryId },
     });
     if (!category)
-        throw new Error("Category not found.");
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "Category not found.");
     // OPTIONAL: CHECK IF ANY POSTS ARE USING THIS CATEGORY BEFORE DELETION
     const hasPosts = yield prisma_1.default.foodPost.findFirst({
         where: { categoryId },
     });
     if (hasPosts)
-        throw new Error("Cannot delete category with associated posts.");
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Cannot delete category with associated posts.");
     // DELETE THE CATEGORY
     yield prisma_1.default.category.delete({
         where: { id: categoryId },

@@ -67,7 +67,8 @@ const getCommentsByPostId = async (
 };
 
 const deleteCommentById = async (commentId: string, email: string) => {
-  if (!commentId) throw new Error("Comment ID is required.");
+  if (!commentId)
+    throw new ApiError(httpStatus.BAD_REQUEST, "Comment ID is required.");
 
   // GET THE USER TRYING TO DELETE THE COMMENT
   const userData = await prisma.user.findUnique({
@@ -81,11 +82,14 @@ const deleteCommentById = async (commentId: string, email: string) => {
     where: { id: commentId },
   });
 
-  if (!comment) throw new Error("Comment not found.");
+  if (!comment) throw new ApiError(httpStatus.NOT_FOUND, "Comment not found.");
 
   // IF NOT ADMIN, ONLY ALLOW THE COMMENT OWNER TO DELETE
   if (userData.role !== UserRole.ADMIN && comment.userId !== userData.id)
-    throw new Error("You are not authorized to delete this comment.");
+    throw new ApiError(
+      httpStatus.UNAUTHORIZED,
+      "You are not authorized to delete this comment."
+    );
 
   // DELETE THE COMMENT
   await prisma.comment.delete({

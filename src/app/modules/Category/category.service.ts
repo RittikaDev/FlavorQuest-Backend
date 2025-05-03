@@ -25,14 +25,18 @@ const deleteCategoryById = async (categoryId: string, email: string) => {
   if (!userData) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
 
   if (userData.role !== UserRole.ADMIN)
-    throw new Error("Only admins can delete categories.");
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "Only admins can delete categories."
+    );
 
   // OPTIONAL: CHECK IF THE CATEGORY EXISTS
   const category = await prisma.category.findUnique({
     where: { id: categoryId },
   });
 
-  if (!category) throw new Error("Category not found.");
+  if (!category)
+    throw new ApiError(httpStatus.NOT_FOUND, "Category not found.");
 
   // OPTIONAL: CHECK IF ANY POSTS ARE USING THIS CATEGORY BEFORE DELETION
   const hasPosts = await prisma.foodPost.findFirst({
@@ -40,7 +44,10 @@ const deleteCategoryById = async (categoryId: string, email: string) => {
   });
 
   if (hasPosts)
-    throw new Error("Cannot delete category with associated posts.");
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Cannot delete category with associated posts."
+    );
 
   // DELETE THE CATEGORY
   await prisma.category.delete({

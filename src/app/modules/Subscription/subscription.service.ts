@@ -96,7 +96,11 @@ const verifyPayment = async (orderId: string) => {
         where: { transactionId: orderId },
       });
 
-      if (!sub) throw new Error("Subscription not found during transaction");
+      if (!sub)
+        throw new ApiError(
+          httpStatus.NOT_FOUND,
+          "Subscription not found during transaction"
+        );
 
       await tx.user.update({
         where: { id: sub.userId },

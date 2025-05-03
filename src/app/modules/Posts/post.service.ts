@@ -26,7 +26,8 @@ const createPost = async (user: IAuthUser, req: Request) => {
     where: { id: categoryId },
   });
 
-  if (!categoryExists) throw new Error("Invalid category ID");
+  if (!categoryExists)
+    throw new ApiError(httpStatus.BAD_REQUEST, "Invalid category ID");
 
   // FILE UPLOAD
   const file = req.file as IFile;
@@ -87,14 +88,15 @@ const updatePostByUser = async (
 
   // ENSURE THE LOGGED-IN USER OWNS THE POST
   if (existingPost.userId !== userData.id)
-    throw new Error("Unauthorized: You cannot update this post");
+    throw new ApiError(httpStatus.UNAUTHORIZED, "You cannot update this post");
 
   //  CHECK IF CATEGORY ID EXISTS IF UPDATED
   if (categoryId) {
     const categoryExists = await prisma.category.findUnique({
       where: { id: categoryId },
     });
-    if (!categoryExists) throw new Error("Invalid category ID");
+    if (!categoryExists)
+      throw new ApiError(httpStatus.BAD_REQUEST, "Invalid category ID");
   }
 
   // FILE UPLOAD
@@ -159,7 +161,7 @@ const getPostById = async (id: string) => {
     },
   });
 
-  if (!post) throw new Error("Post not found");
+  if (!post) throw new ApiError(httpStatus.NOT_FOUND, "Post not found");
 
   // Compute average rating
   const averageRating =
@@ -209,7 +211,8 @@ const updatePostStatus = async (
   console.log(finalStatus);
   // IF TRYING TO SET ISPREMIUM TO TRUE, MAKE SURE POST IS APPROVED
   if (data.isPremium && finalStatus !== PostStatus.APPROVED) {
-    throw new Error(
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
       "Post must be approved before it can be marked as premium."
     );
   }
@@ -654,7 +657,7 @@ const deletePostById = async (postId: string, email: string) => {
     where: { id: postId },
   });
 
-  if (!post) throw new Error("Post not found.");
+  if (!post) throw new ApiError(httpStatus.NOT_FOUND, "Post not found.");
 
   const userData = await prisma.user.findUnique({
     where: { email },
@@ -663,7 +666,10 @@ const deletePostById = async (postId: string, email: string) => {
   if (!userData) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
 
   if (userData.role !== UserRole.ADMIN && post.userId !== userData.id)
-    throw new Error("You are not authorized to delete this post.");
+    throw new ApiError(
+      httpStatus.UNAUTHORIZED,
+      "You are not authorized to delete this post."
+    );
 
   // Run all deletions in a transaction
   await prisma.$transaction([
