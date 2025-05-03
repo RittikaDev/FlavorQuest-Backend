@@ -117,9 +117,27 @@ const getPostById = (id) => __awaiter(void 0, void 0, void 0, function* () {
         include: {
             user: true,
             category: true,
-            ratings: true,
+            ratings: {
+                include: {
+                    user: {
+                        select: {
+                            name: true,
+                            profilePhoto: true,
+                        },
+                    },
+                },
+            },
             votes: true,
-            comments: true, // Include comments to count them
+            comments: {
+                include: {
+                    user: {
+                        select: {
+                            name: true,
+                            profilePhoto: true,
+                        },
+                    },
+                },
+            },
         },
     });
     if (!post)
