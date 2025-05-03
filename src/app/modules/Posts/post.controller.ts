@@ -8,6 +8,9 @@ import { PostStatus } from "@prisma/client";
 import pick from "../../../share/pick";
 import { postFilterableFields } from "./post.constants";
 import ApiError from "../../errors/ApiError";
+import { jwtHelpers } from "../../../helpers/jwtHelpers";
+import config from "../../../config";
+import { Secret } from "jsonwebtoken";
 
 // CREATE A POST
 const createPost = catchAsync(
@@ -71,51 +74,66 @@ const updatePost = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getPosts = catchAsync(async (req: Request, res: Response) => {
-  const filters = pick(req.query, postFilterableFields);
-  const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+const getPosts = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    // console.log(req.headers);
 
-  const result = await PostService.getPosts(null, filters, options);
-
-  const isFiltering = Object.values(filters).some(
-    (val) => val !== undefined && val !== ""
-  );
-
-  if (result.data.length === 0) {
-    if (!isFiltering) {
-      // NO FILTERS AND NO DATA → RETURN 404
-      return sendResponse(res, {
-        success: false,
-        status: httpStatus.NOT_FOUND,
-        message: "No posts found!",
-        data: null,
-      });
-    } else {
-      // FILTERS APPLIED BUT NO MATCH → RETURN 200 WITH EMPTY DATA
-      return sendResponse(res, {
-        success: true,
-        status: httpStatus.OK,
-        message: "No posts found matching your filters.",
-        data: {
-          meta: {
-            total: 0,
-            page: options.page || 1,
-            limit: options.limit || 10,
-          },
-          data: [],
-        },
-      });
+    const token = req.headers.authorization?.split(" ")[1];
+    let verifiedUser;
+    if (token) {
+      verifiedUser = jwtHelpers.verifyToken(
+        token!,
+        config.jwt.jwt_secret as Secret
+      );
     }
-  }
+    // console.log("user", verifiedUser);
+    const user = verifiedUser ?? null;
 
-  // DATA EXISTS
-  sendResponse(res, {
-    success: true,
-    status: httpStatus.OK,
-    message: "Posts retrieved successfully",
-    data: result,
-  });
-});
+    const filters = pick(req.query, postFilterableFields);
+    const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+
+    const result = await PostService.getPosts(user, filters, options);
+
+    const isFiltering = Object.values(filters).some(
+      (val) => val !== undefined && val !== ""
+    );
+
+    if (result.data.length === 0) {
+      if (!isFiltering) {
+        // NO FILTERS AND NO DATA → RETURN 404
+        return sendResponse(res, {
+          success: false,
+          status: httpStatus.NOT_FOUND,
+          message: "No posts found!",
+          data: null,
+        });
+      } else {
+        // FILTERS APPLIED BUT NO MATCH → RETURN 200 WITH EMPTY DATA
+        return sendResponse(res, {
+          success: true,
+          status: httpStatus.OK,
+          message: "No posts found matching your filters.",
+          data: {
+            meta: {
+              total: 0,
+              page: options.page || 1,
+              limit: options.limit || 10,
+            },
+            data: [],
+          },
+        });
+      }
+    }
+
+    // DATA EXISTS
+    sendResponse(res, {
+      success: true,
+      status: httpStatus.OK,
+      message: "Posts retrieved successfully",
+      data: result,
+    });
+  }
+);
 
 const getAdminPosts = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {

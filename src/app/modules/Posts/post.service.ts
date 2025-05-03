@@ -69,7 +69,7 @@ const updatePostByUser = async (
   const { title, description, location, minPrice, maxPrice, categoryId } =
     req.body;
 
-  console.log(postId);
+  // console.log(postId);
 
   // USER DATA
   const userData = await prisma.user.findUnique({
@@ -87,7 +87,7 @@ const updatePostByUser = async (
     throw new ApiError(httpStatus.NOT_FOUND, "Post not found!");
 
   // ENSURE THE LOGGED-IN USER OWNS THE POST
-  if (existingPost.userId !== userData.id)
+  if (userData.role !== UserRole.ADMIN && existingPost.userId !== userData.id)
     throw new ApiError(httpStatus.UNAUTHORIZED, "You cannot update this post");
 
   //  CHECK IF CATEGORY ID EXISTS IF UPDATED
@@ -228,7 +228,7 @@ const updatePostStatus = async (
 };
 
 const getPosts = async (
-  user: IAuthUser,
+  user: any,
   filters: {
     searchTerm?: string;
     minPrice?: number;
@@ -243,18 +243,22 @@ const getPosts = async (
     paginationHelper.calculatePagination(options);
 
   const andConditions: Prisma.FoodPostWhereInput[] = [];
-
+  // console.log(user);
   if (user) {
+    // console.log(user);
     const userData = await prisma.user.findUnique({
       where: { email: user.email },
     });
 
     if (!userData) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
 
-    if (userData.role !== UserRole.ADMIN) {
+    if (userData.role === UserRole.ADMIN) {
+      // Admins see everything (no extra filters)
+    } else if (userData.role === UserRole.PREMIUM_USER)
       andConditions.push({ status: "APPROVED" });
-      if (userData.role !== UserRole.PREMIUM_USER)
-        andConditions.push({ isPremium: false });
+    else if (userData.role === UserRole.USER) {
+      andConditions.push({ status: "APPROVED" });
+      andConditions.push({ isPremium: false });
     }
   } else {
     // ANONYMOUS USERS: SHOW ONLY PUBLIC, APPROVED, NON-PREMIUM POSTS
@@ -306,7 +310,7 @@ const getPosts = async (
       },
     });
   }
-  console.log(filters);
+  // console.log(filters);
   if (
     filters.status &&
     Object.values(PostStatus).includes(filters.status as PostStatus)
@@ -428,9 +432,10 @@ const getUserPosts = async (
   if (!userData) throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
 
   const andConditions: Prisma.FoodPostWhereInput[] = [{ userId: userData.id }];
+  console.log(userData.role);
+  if (userData.role == UserRole.USER) andConditions.push({ isPremium: false });
 
-  if (userData.role !== UserRole.PREMIUM_USER)
-    andConditions.push({ isPremium: false });
+  console.log(userData, andConditions);
 
   // SEARCHTERM FILTER (title or category name)
   if (filters.searchTerm) {

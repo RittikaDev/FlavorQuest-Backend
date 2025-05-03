@@ -65,7 +65,7 @@ const createPost = (user, req) => __awaiter(void 0, void 0, void 0, function* ()
 // UPDATE POST
 const updatePostByUser = (user, req, postId) => __awaiter(void 0, void 0, void 0, function* () {
     const { title, description, location, minPrice, maxPrice, categoryId } = req.body;
-    console.log(postId);
+    // console.log(postId);
     // USER DATA
     const userData = yield prisma_1.default.user.findUnique({
         where: { email: user === null || user === void 0 ? void 0 : user.email },
@@ -79,7 +79,7 @@ const updatePostByUser = (user, req, postId) => __awaiter(void 0, void 0, void 0
     if (!existingPost)
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "Post not found!");
     // ENSURE THE LOGGED-IN USER OWNS THE POST
-    if (existingPost.userId !== userData.id)
+    if (userData.role !== client_1.UserRole.ADMIN && existingPost.userId !== userData.id)
         throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, "You cannot update this post");
     //  CHECK IF CATEGORY ID EXISTS IF UPDATED
     if (categoryId) {
@@ -192,16 +192,22 @@ const updatePostStatus = (postId, data) => __awaiter(void 0, void 0, void 0, fun
 const getPosts = (user, filters, options) => __awaiter(void 0, void 0, void 0, function* () {
     const { limit, page, skip, sortBy, sortOrder } = paginationHelper_1.paginationHelper.calculatePagination(options);
     const andConditions = [];
+    // console.log(user);
     if (user) {
+        // console.log(user);
         const userData = yield prisma_1.default.user.findUnique({
             where: { email: user.email },
         });
         if (!userData)
             throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
-        if (userData.role !== client_1.UserRole.ADMIN) {
+        if (userData.role === client_1.UserRole.ADMIN) {
+            // Admins see everything (no extra filters)
+        }
+        else if (userData.role === client_1.UserRole.PREMIUM_USER)
             andConditions.push({ status: "APPROVED" });
-            if (userData.role !== client_1.UserRole.PREMIUM_USER)
-                andConditions.push({ isPremium: false });
+        else if (userData.role === client_1.UserRole.USER) {
+            andConditions.push({ status: "APPROVED" });
+            andConditions.push({ isPremium: false });
         }
     }
     else {
@@ -252,7 +258,7 @@ const getPosts = (user, filters, options) => __awaiter(void 0, void 0, void 0, f
             },
         });
     }
-    console.log(filters);
+    // console.log(filters);
     if (filters.status &&
         Object.values(client_1.PostStatus).includes(filters.status)) {
         andConditions.push({
@@ -338,8 +344,10 @@ const getUserPosts = (email, filters, options) => __awaiter(void 0, void 0, void
     if (!userData)
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
     const andConditions = [{ userId: userData.id }];
-    if (userData.role !== client_1.UserRole.PREMIUM_USER)
+    console.log(userData.role);
+    if (userData.role == client_1.UserRole.USER)
         andConditions.push({ isPremium: false });
+    console.log(userData, andConditions);
     // SEARCHTERM FILTER (title or category name)
     if (filters.searchTerm) {
         andConditions.push({

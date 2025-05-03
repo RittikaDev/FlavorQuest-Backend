@@ -20,6 +20,8 @@ const post_service_1 = require("./post.service");
 const pick_1 = __importDefault(require("../../../share/pick"));
 const post_constants_1 = require("./post.constants");
 const ApiError_1 = __importDefault(require("../../errors/ApiError"));
+const jwtHelpers_1 = require("../../../helpers/jwtHelpers");
+const config_1 = __importDefault(require("../../../config"));
 // CREATE A POST
 const createPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = req.user;
@@ -64,9 +66,18 @@ const updatePost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     });
 }));
 const getPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // console.log(req.headers);
+    var _a;
+    const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
+    let verifiedUser;
+    if (token) {
+        verifiedUser = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.jwt.jwt_secret);
+    }
+    // console.log("user", verifiedUser);
+    const user = verifiedUser !== null && verifiedUser !== void 0 ? verifiedUser : null;
     const filters = (0, pick_1.default)(req.query, post_constants_1.postFilterableFields);
     const options = (0, pick_1.default)(req.query, ["limit", "page", "sortBy", "sortOrder"]);
-    const result = yield post_service_1.PostService.getPosts(null, filters, options);
+    const result = yield post_service_1.PostService.getPosts(user, filters, options);
     const isFiltering = Object.values(filters).some((val) => val !== undefined && val !== "");
     if (result.data.length === 0) {
         if (!isFiltering) {
