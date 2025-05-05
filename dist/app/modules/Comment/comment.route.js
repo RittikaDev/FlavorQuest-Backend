@@ -10,7 +10,7 @@ const auth_1 = __importDefault(require("../../middlewares/auth"));
 const client_1 = require("@prisma/client");
 const comment_validation_1 = require("./comment.validation");
 const router = express_1.default.Router();
-router.post("/:postId", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER), (req, res, next) => {
+router.post("/:postId", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER, client_1.UserRole.ADMIN), (req, res, next) => {
     req.body = comment_validation_1.CommentValidations.createCommentSchema.parse(req.body);
     return comment_controller_1.CommentController.createComment(req, res, next);
 });

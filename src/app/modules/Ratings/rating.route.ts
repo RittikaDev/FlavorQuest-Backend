@@ -8,12 +8,12 @@ import { RatingValidations } from "./rating.validation";
 const router = express.Router();
 
 router.post(
-	"/:postId",
-	auth(UserRole.USER, UserRole.PREMIUM_USER),
-	(req: Request, res: Response, next: NextFunction) => {
-		req.body = RatingValidations.createOrUpdateRatingSchema.parse(req.body);
-		return RatingController.ratePost(req, res, next);
-	}
+  "/:postId",
+  auth(UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN),
+  (req: Request, res: Response, next: NextFunction) => {
+    req.body = RatingValidations.createOrUpdateRatingSchema.parse(req.body);
+    return RatingController.ratePost(req, res, next);
+  }
 );
 router.get("/:postId", RatingController.getPostRatings);
 

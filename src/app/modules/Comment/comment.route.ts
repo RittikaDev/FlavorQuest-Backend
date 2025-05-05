@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post(
   "/:postId",
-  auth(UserRole.USER, UserRole.PREMIUM_USER),
+  auth(UserRole.USER, UserRole.PREMIUM_USER, UserRole.ADMIN),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = CommentValidations.createCommentSchema.parse(req.body);
     return CommentController.createComment(req, res, next);

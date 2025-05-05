@@ -10,10 +10,10 @@ const client_1 = require("@prisma/client");
 const vote_controller_1 = require("./vote.controller");
 const vote_validation_1 = require("./vote.validation");
 const router = express_1.default.Router();
-// 
-router.post("/:postId", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER), (req, res, next) => {
+//
+router.post("/:postId", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER, client_1.UserRole.ADMIN), (req, res, next) => {
     req.body = vote_validation_1.VoteValidation.createVoteSchema.parse(req.body);
     return vote_controller_1.VoteController.vote(req, res, next);
 });
-router.delete("/:postId", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER), vote_controller_1.VoteController.unvote);
+router.delete("/:postId", (0, auth_1.default)(client_1.UserRole.USER, client_1.UserRole.PREMIUM_USER, client_1.UserRole.ADMIN), vote_controller_1.VoteController.unvote);
 exports.VoteRoutes = router;
