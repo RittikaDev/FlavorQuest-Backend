@@ -8,23 +8,26 @@ datasource db {
 }
 
 model User {
-  id                    String        @id @unique @default(uuid())
-  name                  String
-  email                 String        @unique
-  password              String
-  profilePhoto          String?
-  contactNumber         String?
-  needPasswordChange    Boolean       @default(true)
-  role                  UserRole      @default(USER)
-  status                UserStatus    @default(ACTIVE)
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
+  id                        String        @id @unique @default(uuid())
+  name                      String
+  email                     String        @unique
+  password                  String
+  profilePhoto              String?
+  contactNumber             String?
+  needPasswordChange        Boolean       @default(true)
+  role                      UserRole      @default(USER)
+  status                    UserStatus    @default(ACTIVE)
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @updatedAt
 
-  foodpost              FoodPost[]
-  comments              Comment[]
-  votes                 Vote[]
-  ratings               Rating[]
-  subscriptions         Subscription[]
+  foodpost                  FoodPost[]
+  comments                  Comment[]
+  votes                     Vote[]
+  ratings                   Rating[]
+  subscriptions             Subscription[]
+
+  sentFriendRequests        FriendRequest[] @relation("SentRequests")
+  receivedFriendRequests    FriendRequest[] @relation("ReceivedRequests")
   
   @@index([email])
   @@index([status])
@@ -122,6 +125,27 @@ model Subscription {
   @@index([userId])
   @@map("subscriptions")
 }
+
+model FriendRequest {
+  id         String     @id @default(uuid())
+  senderId   String
+  receiverId String
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime   @default(now())
+
+  sender     User       @relation("SentRequests", fields: [senderId], references: [id])
+  receiver   User       @relation("ReceivedRequests", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
+  @@map("friend_requests")
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 
 
 enum UserRole {
