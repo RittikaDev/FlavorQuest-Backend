@@ -22,9 +22,10 @@ const sendFriendRequest = (user, receiverId) => __awaiter(void 0, void 0, void 0
     });
     if (!userData)
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found!");
-    let senderId = userData.id;
+    const senderId = userData.id;
     if (senderId === receiverId)
         throw new Error("Cannot send request to yourself");
+    // Check if sender already sent a request to receiver
     const existing = yield prisma_1.default.friendRequest.findUnique({
         where: {
             senderId_receiverId: { senderId, receiverId },
@@ -32,6 +33,16 @@ const sendFriendRequest = (user, receiverId) => __awaiter(void 0, void 0, void 0
     });
     if (existing)
         throw new Error("Request already sent");
+    // Check if receiver already sent a PENDING request to sender
+    const reverseRequest = yield prisma_1.default.friendRequest.findFirst({
+        where: {
+            senderId: receiverId,
+            receiverId: senderId,
+            status: "PENDING", // Only block if still pending
+        },
+    });
+    if (reverseRequest)
+        throw new Error("User has already sent you a pending friend request");
     return prisma_1.default.friendRequest.create({
         data: { senderId, receiverId },
     });
@@ -110,7 +121,16 @@ const getFriendSuggestions = (user) => __awaiter(void 0, void 0, void 0, functio
     const suggestions = allUsers
         .filter((user) => {
         const relation = requestMap.get(user.id);
-        return !relation || relation.status !== "ACCEPTED";
+        // Exclude ONLY if:
+        // relation exists AND
+        // relation.status === 'PENDING' AND
+        // relation.isSender === false (they sent you the request)
+        if (relation &&
+            relation.status === "PENDING" &&
+            relation.isSender === false) {
+            return false; // exclude from suggestions
+        }
+        return true; // include all others
     })
         .map((user) => {
         var _a;
