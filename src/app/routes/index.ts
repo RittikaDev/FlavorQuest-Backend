@@ -9,6 +9,8 @@ import { RatingRoutes } from "../modules/Ratings/rating.route";
 import { VoteRoutes } from "../modules/Vote/vote.route";
 import { SubscriptionRoutes } from "../modules/Subscription/subscription.route";
 import { FriendRoutes } from "../modules/Friendequest/friendequest.route";
+import { GroupRoutes } from "../modules/Group/group.route";
+import { ShareRoutes } from "../modules/Share/share.route";
 
 const router = express.Router();
 
@@ -48,6 +50,14 @@ const allRoutes = [
 	{
 		path: "/friend",
 		route: FriendRoutes,
+	},
+	{
+		path: "/groups",
+		route: GroupRoutes,
+	},
+	{
+		path: "/share",
+		route: ShareRoutes,
 	},
 ];
 

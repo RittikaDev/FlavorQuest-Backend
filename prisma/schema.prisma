@@ -8,26 +8,30 @@ datasource db {
 }
 
 model User {
-  id                        String        @id @unique @default(uuid())
+  id                        String              @id @unique @default(uuid())
   name                      String
-  email                     String        @unique
+  email                     String              @unique
   password                  String
   profilePhoto              String?
   contactNumber             String?
-  needPasswordChange        Boolean       @default(true)
-  role                      UserRole      @default(USER)
-  status                    UserStatus    @default(ACTIVE)
-  createdAt                 DateTime      @default(now())
-  updatedAt                 DateTime      @updatedAt
+  needPasswordChange        Boolean             @default(true)
+  role                      UserRole            @default(USER)
+  status                    UserStatus          @default(ACTIVE)
+  createdAt                 DateTime            @default(now())
+  updatedAt                 DateTime            @updatedAt
 
   foodpost                  FoodPost[]
   comments                  Comment[]
   votes                     Vote[]
   ratings                   Rating[]
   subscriptions             Subscription[]
+  groupMemberships          GroupMember[]  
 
-  sentFriendRequests        FriendRequest[] @relation("SentRequests")
-  receivedFriendRequests    FriendRequest[] @relation("ReceivedRequests")
+  sentFriendRequests        FriendRequest[]     @relation("SentRequests")
+  receivedFriendRequests    FriendRequest[]     @relation("ReceivedRequests")
+  groupsOwned               Group[]             @relation("OwnerGroup")
+  sentShares       Share[]  @relation("SentShares")
+  receivedShares   Share[]  @relation("ReceivedShares")
   
   @@index([email])
   @@index([status])
@@ -53,10 +57,10 @@ model FoodPost {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  comments     Comment[]
-  votes        Vote[]
-  ratings      Rating[]
-
+  comments       Comment[]
+  votes          Vote[]
+  ratings        Rating[]
+  groupShare     Share[] @relation("PostShare")
   @@map("food_posts")
 }
 
@@ -140,13 +144,53 @@ model FriendRequest {
   @@map("friend_requests")
 }
 
+model Group {
+  id            String          @id @default(uuid())
+  name          String
+  ownerId       String
+  owner         User            @relation("OwnerGroup",fields: [ownerId], references: [id])
+  members       GroupMember[]
+  createdAt     DateTime        @default(now())
+  groupShare    Share[]         @relation("GroupShare")
+
+  @@map("groups")
+}
+
+model GroupMember {
+  id        String   @id @default(uuid())
+  groupId   String
+  userId    String
+  group     Group    @relation(fields: [groupId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  joinedAt  DateTime @default(now())
+
+  @@unique([groupId, userId])
+  @@map("group_members")
+}
+
+model Share {
+  id            String     @id @default(uuid())
+  senderId      String
+  receiverId    String?
+  groupId       String?
+  postId        String
+  message       String?
+  createdAt     DateTime   @default(now())
+
+  sender        User       @relation("SentShares", fields: [senderId], references: [id])
+  receiver      User?      @relation("ReceivedShares", fields: [receiverId], references: [id])
+  group         Group?     @relation("GroupShare",fields: [groupId], references: [id])
+  post          FoodPost   @relation("PostShare",fields: [postId], references: [id])
+
+  @@map("shares")
+}
+
+
 enum FriendRequestStatus {
   PENDING
   ACCEPTED
   REJECTED
 }
-
-
 
 enum UserRole {
   USER
