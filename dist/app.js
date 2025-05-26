@@ -17,6 +17,7 @@ app.use((0, cors_1.default)({
         "https://127.0.0.1:3000",
         "http://127.0.0.1:3000",
         "https://flavor-quest-frontend.vercel.app",
+        "https://flavor-quest-frontend-phi.vercel.app",
     ],
     credentials: true,
 }));

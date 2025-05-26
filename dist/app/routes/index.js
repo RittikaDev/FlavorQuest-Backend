@@ -12,6 +12,9 @@ const comment_route_1 = require("../modules/Comment/comment.route");
 const rating_route_1 = require("../modules/Ratings/rating.route");
 const vote_route_1 = require("../modules/Vote/vote.route");
 const subscription_route_1 = require("../modules/Subscription/subscription.route");
+const friendequest_route_1 = require("../modules/Friendequest/friendequest.route");
+const group_route_1 = require("../modules/Group/group.route");
+const share_route_1 = require("../modules/Share/share.route");
 const router = express_1.default.Router();
 const allRoutes = [
     {
@@ -45,6 +48,18 @@ const allRoutes = [
     {
         path: "/subscribe",
         route: subscription_route_1.SubscriptionRoutes,
+    },
+    {
+        path: "/friend",
+        route: friendequest_route_1.FriendRoutes,
+    },
+    {
+        path: "/groups",
+        route: group_route_1.GroupRoutes,
+    },
+    {
+        path: "/share",
+        route: share_route_1.ShareRoutes,
     },
 ];
 allRoutes.forEach((route) => router.use(route.path, route.route));
